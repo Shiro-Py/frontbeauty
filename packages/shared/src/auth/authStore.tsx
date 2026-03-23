@@ -8,7 +8,8 @@ import React, {
 import { router } from 'expo-router';
 
 import { logout as apiLogout } from '../api/auth';
-import { setUnauthorizedHandler, tokenStorage } from '../api/client';
+import { setUnauthorizedHandler } from '../api/client';
+import { tokenStorage } from '../storage/tokenStorage';
 
 export type AuthStatus = 'loading' | 'authorized' | 'unauthorized';
 
