@@ -1,0 +1,12 @@
+{
+  "name": "@beautygo/shared",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "peerDependencies": {
+    "axios": "*",
+    "expo-secure-store": "*",
+    "react": "*",
+    "react-native": "*"
+  }
+}

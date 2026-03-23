@@ -1,0 +1,20 @@
+{
+  "name": "beautygo-mobile",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "client": "yarn workspace @beautygo/client start",
+    "pro": "yarn workspace @beautygo/pro start",
+    "client:android": "yarn workspace @beautygo/client android",
+    "pro:android": "yarn workspace @beautygo/pro android",
+    "client:ios": "yarn workspace @beautygo/client ios",
+    "pro:ios": "yarn workspace @beautygo/pro ios"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2"
+  },
+  "packageManager": "yarn@1.22.22"
+}
