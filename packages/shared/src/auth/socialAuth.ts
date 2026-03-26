@@ -100,11 +100,16 @@ export function useGoogleAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Если ключи не заданы в .env — передаём заглушку чтобы хук не падал при монтировании.
+  // Кнопка будет задизаблена через `configured`.
   const [request, response, promptAsync] = Google.useAuthRequest({
-    // Клиентский ID из Google Cloud Console (Expo / Web)
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? 'not-configured',
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? 'not-configured',
   });
+
+  const configured =
+    !!process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+    !!process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
 
   useEffect(() => {
     if (response?.type !== 'success') return;
@@ -122,7 +127,7 @@ export function useGoogleAuth() {
     signInWithGoogle: () => { setError(null); promptAsync(); },
     loading,
     error,
-    ready: !!request,
+    ready: !!request && configured,
   };
 }
 

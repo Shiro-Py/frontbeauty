@@ -1,8 +1,8 @@
 // API
 export { initializeApiClient, getApiClient, setUnauthorizedHandler, setDeviceMismatchHandler, BASE_URL } from './api/client';
 export type { AppType } from './api/client';
-export { sendOtp, verifyOtp, completeRegistration, logout, getMe, updateClientProfile, createMasterProfile, createService, updateMasterProfile, deleteAccount } from './api/auth';
-export type { VerifyOtpResponse, RegisterResponse, UserProfile, ClientProfileUpdate, MasterProfileCreate, ServiceData, MasterProfileUpdate } from './api/auth';
+export { sendOtp, verifyOtp, completeRegistration, logout, getMe, updateClientProfile, createMasterProfile, createService, updateMasterProfile, getMasterMe, deleteAccount } from './api/auth';
+export type { VerifyOtpResponse, RegisterResponse, UserProfile, ClientProfileUpdate, MasterProfileCreate, ServiceData, MasterProfileUpdate, MasterMyProfile } from './api/auth';
 
 // Social Auth API
 export { postVKAuth, postGoogleAuth, postAppleAuth, postYandexAuth } from './api/socialAuth';

@@ -170,18 +170,73 @@ export const createService = async (data: ServiceData): Promise<void> => {
 export interface MasterProfileUpdate {
   first_name?: string;
   last_name?: string;
+  bio?: string;
   address?: string;
   lat?: number;
   lng?: number;
+  avatar?: { uri: string; name: string; type: string };
 }
 
 /**
- * Обновить профиль мастера (онбординг шаг 2).
+ * Обновить профиль мастера.
  */
 export const updateMasterProfile = async (data: MasterProfileUpdate): Promise<void> => {
   if (IS_MOCK) return;
   const api = getApiClient();
-  await api.patch('/auth/masters/profile/', data);
+  if (data.avatar) {
+    const formData = new FormData();
+    if (data.first_name) formData.append('first_name', data.first_name);
+    if (data.last_name) formData.append('last_name', data.last_name);
+    if (data.bio !== undefined) formData.append('bio', data.bio);
+    if (data.address) formData.append('address', data.address);
+    if (data.lat != null) formData.append('lat', String(data.lat));
+    if (data.lng != null) formData.append('lng', String(data.lng));
+    formData.append('avatar', data.avatar as any);
+    await api.patch('/masters/profile/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  } else {
+    await api.patch('/masters/profile/', data);
+  }
+};
+
+export interface MasterMyProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  bio?: string;
+  avatar_url?: string;
+  phone?: string;
+  address?: string;
+  rating?: number;
+  reviews_count?: number;
+  verification_level: 0 | 1 | 2 | 3 | 4;
+  status: 'draft' | 'pending' | 'approved' | 'rejected';
+  phone_verified: boolean;
+}
+
+const mockMasterProfile: MasterMyProfile = {
+  id: 'mock_master_id',
+  first_name: 'Mock',
+  last_name: 'Master',
+  bio: 'Профессиональный мастер с опытом работы.',
+  phone: '+79000000000',
+  address: 'ул. Садовая, 15, Москва',
+  rating: 4.8,
+  reviews_count: 12,
+  verification_level: 1,
+  status: 'pending',
+  phone_verified: true,
+};
+
+/**
+ * Профиль текущего мастера.
+ */
+export const getMasterMe = async (): Promise<MasterMyProfile> => {
+  if (IS_MOCK) return { ...mockMasterProfile };
+  const api = getApiClient();
+  const { data } = await api.get<MasterMyProfile>('/masters/me/');
+  return data;
 };
 
 /**
