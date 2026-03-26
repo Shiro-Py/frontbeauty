@@ -1,6 +1,9 @@
 import { getApiClient } from './client';
 import { IS_MOCK } from './mock';
 
+// In-memory store для mock-режима — общий на всё приложение
+const mockFavoritesStore = new Set<string>();
+
 export interface MasterDetail {
   id: string;
   first_name: string;
@@ -12,6 +15,7 @@ export interface MasterDetail {
   distance_km?: number;
   address?: string;
   portfolio: Array<{ id: string; photo_url: string }>;
+  is_favorited?: boolean;
 }
 
 export interface MasterService {
@@ -101,12 +105,32 @@ export const getMasterReviews = async (specialistId: string): Promise<MasterRevi
   return data;
 };
 
-export const toggleFavorite = async (specialistId: string, isFavorite: boolean): Promise<void> => {
-  if (IS_MOCK) return;
+export const toggleFavorite = async (specialistId: string): Promise<void> => {
+  if (IS_MOCK) { mockFavoritesStore.add(specialistId); return; }
   const api = getApiClient();
-  if (isFavorite) {
-    await api.delete(`/favorites/${specialistId}/`);
-  } else {
-    await api.post('/favorites/', { specialist_id: specialistId });
-  }
+  await api.post(`/specialists/${specialistId}/favorite/`);
 };
+
+export const removeFavorite = async (specialistId: string): Promise<void> => {
+  if (IS_MOCK) { mockFavoritesStore.delete(specialistId); return; }
+  const api = getApiClient();
+  await api.delete(`/specialists/${specialistId}/favorite/`);
+};
+
+export const getFavorites = async (): Promise<MasterDetail[]> => {
+  if (IS_MOCK) {
+    const allMasters: MasterDetail[] = [
+      { ...mockMaster, id: '1', first_name: 'Мария', last_name: 'Иванова' },
+      { ...mockMaster, id: '2', first_name: 'Ольга', last_name: 'Смирнова', rating: 4.9, reviews_count: 87 },
+      { ...mockMaster, id: '3', first_name: 'Анна', last_name: 'Петрова', rating: 4.7, reviews_count: 52 },
+      { ...mockMaster, id: '4', first_name: 'Елена', last_name: 'Козлова', rating: 5.0, reviews_count: 210 },
+    ];
+    return allMasters.filter(m => mockFavoritesStore.has(m.id));
+  }
+  const api = getApiClient();
+  const { data } = await api.get<MasterDetail[]>('/specialists/favorites/');
+  return data;
+};
+
+export const isMasterFavorited = (specialistId: string): boolean =>
+  IS_MOCK ? mockFavoritesStore.has(specialistId) : false;

@@ -6,7 +6,7 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  getMasterDetail, getMasterServices, getMasterReviews, toggleFavorite,
+  getMasterDetail, getMasterServices, getMasterReviews, toggleFavorite, removeFavorite,
   MasterDetail, MasterService, MasterReview,
 } from '@beautygo/shared';
 
@@ -91,7 +91,8 @@ export default function MasterProfileScreen() {
     const next = !isFavorite;
     setIsFavorite(next);
     try {
-      await toggleFavorite(id!, next);
+      if (next) await toggleFavorite(id!);
+      else await removeFavorite(id!);
     } catch {
       setIsFavorite(!next);
     }

@@ -19,7 +19,7 @@ export type { AuthStatus } from './auth/authStore';
 export { useVKAuth, useGoogleAuth, useAppleAuth, useYandexAuth } from './auth/socialAuth';
 
 // Masters
-export { getMasterDetail, getMasterServices, getMasterReviews, toggleFavorite } from './api/masters';
+export { getMasterDetail, getMasterServices, getMasterReviews, toggleFavorite, removeFavorite, getFavorites, isMasterFavorited } from './api/masters';
 export type { MasterDetail, MasterService, MasterReview } from './api/masters';
 
 // Services CRUD
