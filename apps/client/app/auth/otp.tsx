@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Alert, NativeSyntheticEvent, TextInputKeyPressEventData,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { sendOtp, verifyOtp, useAuth } from '@beautygo/shared';
+import { sendOtp, verifyOtp, useAuth, tokenStorage } from '@beautygo/shared';
 
 const CODE_LENGTH = 6;
 const RESEND_TIMEOUT = 60;
@@ -34,7 +34,15 @@ export default function OtpScreen() {
   }, [digits]);
 
   const handleDigitChange = (text: string, index: number) => {
-    const char = text.replace(/\D/g, '').slice(-1);
+    // Обработка вставки полного кода (SMS auto-read / paste)
+    const clean = text.replace(/\D/g, '');
+    if (clean.length >= CODE_LENGTH) {
+      const next = clean.slice(0, CODE_LENGTH).split('');
+      setDigits(next);
+      inputRefs.current[CODE_LENGTH - 1]?.focus();
+      return;
+    }
+    const char = clean.slice(-1);
     const next = [...digits];
     next[index] = char;
     setDigits(next);
@@ -60,18 +68,17 @@ export default function OtpScreen() {
       if (!phone) return;
       setLoading(true);
       try {
-        const res = await verifyOtp(phone, code);
+        const deviceId = await tokenStorage.getDeviceId();
+        const res = await verifyOtp(phone, code, deviceId);
         const { access, refresh, is_new_user } = res.data;
         await signIn(access, refresh, is_new_user);
       } catch (err: any) {
         const errorCode = err?.response?.data?.error?.code;
         let message = 'Попробуйте ещё раз';
-        if (errorCode === 'INVALID_CODE') message = 'Неверный код';
-        if (errorCode === 'CODE_EXPIRED') message = 'Код истёк. Запросите новый';
-        if (errorCode === 'TOO_MANY_ATTEMPTS' || errorCode === 'MAX_ATTEMPTS_EXCEEDED') {
-          message = 'Превышено количество попыток';
-        }
-        if (errorCode === 'CODE_NOT_FOUND') message = 'Код не найден. Запросите новый';
+        if (errorCode === 'INVALID_OTP') message = 'Неверный код';
+        if (errorCode === 'OTP_EXPIRED') message = 'Код истёк. Запросите новый';
+        if (errorCode === 'MAX_ATTEMPTS_EXCEEDED') message = 'Превышено количество попыток. Запросите новый код';
+        if (errorCode === 'RATE_LIMITED') message = 'Слишком много попыток. Подождите немного';
         Alert.alert('Ошибка', message);
         setDigits(Array(CODE_LENGTH).fill(''));
         inputRefs.current[0]?.focus();
@@ -114,11 +121,13 @@ export default function OtpScreen() {
             onChangeText={(text) => handleDigitChange(text, i)}
             onKeyPress={(e) => handleKeyPress(e, i)}
             keyboardType="number-pad"
-            maxLength={1}
+            maxLength={i === 0 ? CODE_LENGTH : 1}
             editable={!loading}
             selectTextOnFocus
             autoFocus={i === 0}
             textAlign="center"
+            textContentType="oneTimeCode"
+            autoComplete="sms-otp"
           />
         ))}
       </View>

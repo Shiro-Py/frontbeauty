@@ -1,6 +1,17 @@
 import { getApiClient } from './client';
 import { IS_MOCK, MOCK_CODE, mockVerifyResponse, mockProfile } from './mock';
 
+export interface UserProfile {
+  id: string;
+  phone: string;
+  role: string;
+  is_verified?: boolean;
+  first_name?: string;
+  last_name?: string;
+  city?: string;
+  avatar_url?: string;
+}
+
 export interface VerifyOtpResponse {
   data: {
     access: string;
@@ -37,16 +48,7 @@ export const sendOtp = async (phone: string): Promise<void> => {
     return;
   }
   const api = getApiClient();
-  try {
-    await api.post('/auth/register/', { phone });
-  } catch (err: any) {
-    const code = err?.response?.data?.error?.code;
-    if (code === 'PHONE_ALREADY_REGISTERED') {
-      await api.post('/auth/login/', { phone });
-    } else {
-      throw err;
-    }
-  }
+  await api.post('/auth/send-code/', { phone, purpose: 'login' });
 };
 
 /**
@@ -56,16 +58,48 @@ export const sendOtp = async (phone: string): Promise<void> => {
 export const verifyOtp = async (
   phone: string,
   code: string,
+  deviceId: string,
 ): Promise<VerifyOtpResponse> => {
   if (IS_MOCK) {
     if (code !== MOCK_CODE) {
-      throw { response: { data: { error: { code: 'INVALID_CODE' } } } };
+      throw { response: { data: { error: { code: 'INVALID_OTP' } } } };
     }
     return mockVerifyResponse(phone);
   }
   const api = getApiClient();
-  const { data } = await api.post<VerifyOtpResponse>('/auth/verify-otp/', { phone, code });
+  const { data } = await api.post<VerifyOtpResponse>('/auth/verify-otp/', {
+    phone,
+    code,
+    device_id: deviceId,
+  });
   return data;
+};
+
+export interface ClientProfileUpdate {
+  first_name?: string;
+  last_name?: string;
+  city?: string;
+  avatar?: { uri: string; name: string; type: string };
+}
+
+/**
+ * Обновить профиль клиента (онбординг и профиль).
+ */
+export const updateClientProfile = async (data: ClientProfileUpdate): Promise<void> => {
+  if (IS_MOCK) return;
+  const api = getApiClient();
+  if (data.avatar) {
+    const formData = new FormData();
+    if (data.first_name) formData.append('first_name', data.first_name);
+    if (data.last_name) formData.append('last_name', data.last_name);
+    if (data.city) formData.append('city', data.city);
+    formData.append('avatar', data.avatar as any);
+    await api.patch('/clients/me/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  } else {
+    await api.patch('/clients/me/', data);
+  }
 };
 
 /**
@@ -94,6 +128,62 @@ export const completeRegistration = async (
   return data;
 };
 
+export interface MasterProfileCreate {
+  first_name: string;
+  last_name: string;
+  bio?: string;
+  avatar: { uri: string; name: string; type: string };
+}
+
+/**
+ * Создать профиль мастера (онбординг шаг 1).
+ */
+export const createMasterProfile = async (data: MasterProfileCreate): Promise<void> => {
+  if (IS_MOCK) return;
+  const api = getApiClient();
+  const formData = new FormData();
+  formData.append('first_name', data.first_name);
+  formData.append('last_name', data.last_name);
+  if (data.bio) formData.append('bio', data.bio);
+  formData.append('avatar', data.avatar as any);
+  await api.post('/masters/profile/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+export interface ServiceData {
+  name: string;
+  price: number;
+  duration_minutes: number;
+  category: string;
+}
+
+/**
+ * Создать услугу мастера.
+ */
+export const createService = async (data: ServiceData): Promise<void> => {
+  if (IS_MOCK) return;
+  const api = getApiClient();
+  await api.post('/services/', data);
+};
+
+export interface MasterProfileUpdate {
+  first_name?: string;
+  last_name?: string;
+  address?: string;
+  lat?: number;
+  lng?: number;
+}
+
+/**
+ * Обновить профиль мастера (онбординг шаг 2).
+ */
+export const updateMasterProfile = async (data: MasterProfileUpdate): Promise<void> => {
+  if (IS_MOCK) return;
+  const api = getApiClient();
+  await api.patch('/auth/masters/profile/', data);
+};
+
 /**
  * Выйти — добавить refresh в blacklist.
  */
@@ -104,12 +194,21 @@ export const logout = async (refreshToken: string): Promise<void> => {
 };
 
 /**
+ * Удалить аккаунт (деактивация, 30 дней на восстановление).
+ */
+export const deleteAccount = async (): Promise<void> => {
+  if (IS_MOCK) return;
+  const api = getApiClient();
+  await api.delete('/users/me/', { data: { confirmation: 'DELETE' } });
+};
+
+/**
  * Профиль текущего пользователя.
  * DEV: возвращает mock-данные
  */
-export const getMe = async () => {
+export const getMe = async (): Promise<UserProfile> => {
   if (IS_MOCK) return mockProfile;
   const api = getApiClient();
-  const { data } = await api.get('/auth/profile/me/');
+  const { data } = await api.get<UserProfile>('/auth/profile/me/');
   return data;
 };

@@ -21,6 +21,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="services"
+        options={{
+          title: 'Услуги',
+          tabBarIcon: ({ color, size }) => <Ionicons name="cut-outline" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="bookings"
         options={{
           title: 'Записи',

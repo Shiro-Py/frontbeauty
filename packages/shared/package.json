@@ -5,7 +5,10 @@
   "types": "src/index.ts",
   "peerDependencies": {
     "axios": "*",
+    "expo-apple-authentication": "*",
+    "expo-auth-session": "*",
     "expo-secure-store": "*",
+    "expo-web-browser": "*",
     "react": "*",
     "react-native": "*"
   }

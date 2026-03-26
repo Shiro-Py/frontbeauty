@@ -11,7 +11,9 @@ initializeApiClient('pro');
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({});
+  const [loaded, error] = useFonts({
+    'NTSomic-Regular': require('../assets/fonts/NTSomic-Regular.ttf'),
+  });
 
   useEffect(() => {
     if (error) throw error;
@@ -38,9 +40,12 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="auth/entry" />
       <Stack.Screen name="auth/phone" />
       <Stack.Screen name="auth/otp" />
       <Stack.Screen name="auth/onboarding" />
+      <Stack.Screen name="auth/onboarding-step2" />
+      <Stack.Screen name="auth/forgot-password" />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

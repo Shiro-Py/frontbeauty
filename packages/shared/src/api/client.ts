@@ -8,6 +8,7 @@ export type AppType = 'client' | 'pro';
 let _apiClient: ReturnType<typeof axios.create> | null = null;
 let _appType: AppType = 'client';
 let _onUnauthorized: (() => void) | null = null;
+let _onDeviceMismatch: (() => void) | null = null;
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -32,12 +33,14 @@ export function initializeApiClient(appType: AppType): void {
     },
   });
 
-  // Request interceptor — добавляет access token
+  // Request interceptor — добавляет access token и X-Device-Id
   _apiClient.interceptors.request.use(async (config) => {
-    const token = await tokenStorage.getAccess();
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    const [token, deviceId] = await Promise.all([
+      tokenStorage.getAccess(),
+      tokenStorage.getDeviceId(),
+    ]);
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    config.headers['X-Device-Id'] = deviceId;
     return config;
   });
 
@@ -46,6 +49,15 @@ export function initializeApiClient(appType: AppType): void {
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
+
+      if (error.response?.status === 401) {
+        const errorCode = error.response?.data?.error?.code;
+        if (errorCode === 'DEVICE_MISMATCH') {
+          await tokenStorage.clear();
+          _onDeviceMismatch?.();
+          return Promise.reject(error);
+        }
+      }
 
       if (
         error.response?.status === 401 &&
@@ -109,4 +121,8 @@ export function getApiClient() {
 
 export function setUnauthorizedHandler(handler: () => void) {
   _onUnauthorized = handler;
+}
+
+export function setDeviceMismatchHandler(handler: () => void) {
+  _onDeviceMismatch = handler;
 }

@@ -38,9 +38,11 @@ function RootLayoutNav() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="auth/entry" />
       <Stack.Screen name="auth/phone" />
       <Stack.Screen name="auth/otp" />
       <Stack.Screen name="auth/onboarding" />
+      <Stack.Screen name="profile/[id]" />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

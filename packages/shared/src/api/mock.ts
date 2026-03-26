@@ -26,4 +26,6 @@ export const mockProfile = {
   first_name: 'Mock',
   last_name: 'User',
   role: 'client',
+  city: 'Москва',
+  avatar_url: undefined,
 };
