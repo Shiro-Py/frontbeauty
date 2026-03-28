@@ -1,28 +1,26 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, Pressable, StyleSheet,
-  ActivityIndicator, KeyboardAvoidingView, Platform, Alert,
+  ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { sendOtp } from '@beautygo/shared';
 
-/** Форматирует введённые цифры в маску +7 (XXX) XXX-XX-XX */
 function formatPhone(digits: string): string {
   const d = digits.slice(0, 10);
-  let result = '+7';
-  if (d.length === 0) return result;
-  result += ' (' + d.slice(0, Math.min(3, d.length));
-  if (d.length < 3) return result;
-  result += ') ' + d.slice(3, Math.min(6, d.length));
-  if (d.length < 6) return result;
-  result += '-' + d.slice(6, Math.min(8, d.length));
-  if (d.length < 8) return result;
-  result += '-' + d.slice(8, 10);
-  return result;
+  let r = '+7';
+  if (!d.length) return r;
+  r += ' ' + d.slice(0, Math.min(3, d.length));
+  if (d.length < 3) return r;
+  r += ' ' + d.slice(3, Math.min(6, d.length));
+  if (d.length < 6) return r;
+  r += ' ' + d.slice(6, Math.min(8, d.length));
+  if (d.length < 8) return r;
+  r += ' ' + d.slice(8, 10);
+  return r;
 }
 
-/** Извлекает 10 цифр локального номера из любого ввода */
 function extractDigits(text: string): string {
   const all = text.replace(/\D/g, '');
   const local = all.startsWith('7') || all.startsWith('8') ? all.slice(1) : all;
@@ -37,68 +35,48 @@ export default function PhoneScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const displayValue = formatPhone(digits);
   const isValid = digits.length === 10;
 
-  const handlePhoneChange = (text: string) => {
+  const handleChange = (text: string) => {
     const d = extractDigits(text);
     setDigits(d);
-    if (d.length > 0 && d.length < 10) {
-      setError('Некорректный номер телефона');
-    } else {
-      setError('');
-    }
+    setError(d.length > 0 && d.length < 10 ? 'Некорректный номер телефона' : '');
   };
 
   const handleSubmit = async () => {
     if (!isValid) return;
-    const phone = '+7' + digits;
     setLoading(true);
     setError('');
     try {
-      await sendOtp(phone);
-      router.push({ pathname: '/auth/otp', params: { phone, mode: mode ?? 'login' } });
+      await sendOtp('+7' + digits);
+      router.push({ pathname: '/auth/otp', params: { phone: '+7' + digits, mode: mode ?? 'login' } });
     } catch (err: any) {
       const code = err?.response?.data?.error?.code;
-      if (code === 'RATE_LIMITED') {
-        setError('Слишком много запросов. Попробуйте через минуту.');
-      } else if (code === 'INVALID_PHONE') {
-        setError('Неверный формат номера телефона.');
-      } else {
-        setError('Не удалось отправить код. Попробуйте ещё раз.');
-      }
+      if (code === 'RATE_LIMITED') setError('Слишком много запросов. Попробуйте через минуту.');
+      else if (code === 'INVALID_PHONE') setError('Некорректный номер телефона');
+      else setError('Не удалось отправить код. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View style={styles.inner}>
+    <KeyboardAvoidingView style={S.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#1A1628" />
+      <View style={S.inner}>
+        <Pressable style={S.back} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
         </Pressable>
 
-        <Text style={styles.title}>
-          {isRegister ? 'Регистрация' : 'Авторизация'}
-        </Text>
-        <Text style={styles.subtitle}>
-          {isRegister
-            ? 'Введите номер телефона для создания аккаунта'
-            : 'Введите номер телефона, чтобы войти в аккаунт'}
-        </Text>
+        <Text style={S.title}>Введите номер телефона</Text>
 
-        <View style={[styles.inputWrap, error ? styles.inputWrapError : null]}>
+        <View style={[S.inputWrap, !!error && S.inputWrapError]}>
           <TextInput
-            style={styles.input}
-            value={displayValue}
-            onChangeText={handlePhoneChange}
-            placeholder="+7 (___) ___-__-__"
-            placeholderTextColor="#B0A8B9"
+            style={S.input}
+            value={digits.length ? formatPhone(digits) : ''}
+            onChangeText={handleChange}
+            placeholder="Номер телефона"
+            placeholderTextColor="#9CA3AF"
             keyboardType="phone-pad"
             autoFocus
             editable={!loading}
@@ -106,117 +84,56 @@ export default function PhoneScreen() {
             autoComplete="tel"
           />
           {digits.length > 0 && (
-            <Pressable
-              onPress={() => { setDigits(''); setError(''); }}
-              hitSlop={8}
-              style={styles.clearButton}
-            >
-              <Ionicons name="close-circle" size={18} color="#B0A8B9" />
+            <Pressable onPress={() => { setDigits(''); setError(''); }} hitSlop={8}>
+              <Ionicons name="close-circle" size={18} color="#9CA3AF" />
             </Pressable>
           )}
         </View>
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-        <View style={styles.spacer} />
+        {!!error && <Text style={S.errorText}>{error}</Text>}
+      </View>
 
+      {/* Sticky кнопка внизу */}
+      <View style={S.bottomBar}>
         <Pressable
-          style={[styles.button, (!isValid || loading) && styles.buttonDisabled]}
+          style={[S.btn, (!isValid || loading) && S.btnDisabled]}
           onPress={handleSubmit}
           disabled={!isValid || loading}
         >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.buttonText}>Получить код</Text>
+            : <Text style={[S.btnText, (!isValid || loading) && S.btnTextDisabled]}>Продолжить</Text>
           }
         </Pressable>
-
-        {isRegister && (
-          <Pressable
-            style={styles.switchModeButton}
-            onPress={() => router.replace({ pathname: '/auth/phone', params: { mode: 'login' } })}
-          >
-            <Text style={styles.switchModeText}>
-              Уже есть аккаунт?{' '}
-              <Text style={styles.switchModeLink}>Войти</Text>
-            </Text>
-          </Pressable>
-        )}
-
-        {!isRegister && (
-          <Pressable
-            style={styles.switchModeButton}
-            onPress={() => router.replace({ pathname: '/auth/phone', params: { mode: 'register' } })}
-          >
-            <Text style={styles.switchModeText}>
-              Нет аккаунта?{' '}
-              <Text style={styles.switchModeLink}>Зарегистрироваться</Text>
-            </Text>
-          </Pressable>
-        )}
-
       </View>
+
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  inner: { flex: 1, paddingHorizontal: 24, paddingTop: 56, paddingBottom: 40 },
+const S = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#fff' },
+  inner: { flex: 1, paddingHorizontal: 20, paddingTop: 56 },
 
-  backButton: { marginBottom: 32 },
+  back: { marginBottom: 28 },
 
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#1A1628',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#7A7286',
-    marginBottom: 32,
-    lineHeight: 22,
-  },
+  title: { fontSize: 24, fontWeight: '700', color: '#1A1A1A', marginBottom: 24 },
 
   inputWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 56,
-    borderWidth: 1.5,
-    borderColor: '#E2DCF0',
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    backgroundColor: '#FAFAFA',
-    marginBottom: 6,
+    flexDirection: 'row', alignItems: 'center',
+    height: 52, borderWidth: 1, borderColor: '#E5E5E5',
+    borderRadius: 12, paddingHorizontal: 14, backgroundColor: '#fff',
   },
-  inputWrapError: { borderColor: '#FF6B6B' },
-  input: {
-    flex: 1,
-    fontSize: 18,
-    color: '#1A1628',
-    letterSpacing: 1,
-  },
-  clearButton: { paddingLeft: 8 },
-  errorText: {
-    fontSize: 13,
-    color: '#FF6B6B',
-    marginBottom: 4,
-    marginLeft: 2,
-  },
+  inputWrapError: { borderColor: '#E53935' },
+  input: { flex: 1, fontSize: 16, color: '#1A1A1A' },
+  errorText: { fontSize: 13, color: '#E53935', marginTop: 6 },
 
-  spacer: { flex: 1 },
-
-  button: {
-    height: 56,
-    backgroundColor: '#7B61FF',
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+  bottomBar: { paddingHorizontal: 20, paddingBottom: 40 },
+  btn: {
+    height: 52, borderRadius: 999, backgroundColor: '#1A1A1A',
+    alignItems: 'center', justifyContent: 'center',
   },
-  buttonDisabled: { backgroundColor: '#C4B8FF' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-
-  switchModeButton: { alignItems: 'center', paddingVertical: 16, marginTop: 8 },
-  switchModeText: { fontSize: 14, color: '#9CA3AF' },
-  switchModeLink: { color: '#7B61FF', fontWeight: '600' },
+  btnDisabled: { backgroundColor: '#E5E5E5' },
+  btnText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  btnTextDisabled: { color: '#9CA3AF' },
 });

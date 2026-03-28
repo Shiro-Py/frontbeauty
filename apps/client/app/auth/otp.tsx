@@ -1,167 +1,168 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, TextInput, Pressable, StyleSheet,
-  ActivityIndicator, Alert, NativeSyntheticEvent,
+  ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { sendOtp, verifyOtp, useAuth, tokenStorage } from '@beautygo/shared';
 
-const CODE_LENGTH = 6;
-const RESEND_TIMEOUT = 30;
+const RESEND_TIMEOUT = 28;
 
 export default function OtpScreen() {
-  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const { phone, mode } = useLocalSearchParams<{ phone: string; mode?: string }>();
+  const isRegister = mode === 'register';
   const { signIn } = useAuth();
 
-  const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(''));
+  const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [blocked, setBlocked] = useState(false);
   const [timer, setTimer] = useState(RESEND_TIMEOUT);
-
-  const inputRefs = useRef<Array<TextInput | null>>(Array(CODE_LENGTH).fill(null));
 
   useEffect(() => {
     if (timer <= 0) return;
-    const id = setTimeout(() => setTimer((t) => t - 1), 1000);
+    const id = setTimeout(() => setTimer(t => t - 1), 1000);
     return () => clearTimeout(id);
   }, [timer]);
 
-  useEffect(() => {
-    const code = digits.join('');
-    if (code.length === CODE_LENGTH && !digits.includes('')) {
-      handleVerify(code);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [digits]);
+  const pad = (n: number) => String(n).padStart(2, '0');
 
-  const handleDigitChange = (text: string, index: number) => {
-    // Обработка вставки полного кода (SMS auto-read / paste)
-    const clean = text.replace(/\D/g, '');
-    if (clean.length >= CODE_LENGTH) {
-      const next = clean.slice(0, CODE_LENGTH).split('');
-      setDigits(next);
-      inputRefs.current[CODE_LENGTH - 1]?.focus();
-      return;
-    }
-    const char = clean.slice(-1);
-    const next = [...digits];
-    next[index] = char;
-    setDigits(next);
-    if (char && index < CODE_LENGTH - 1) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleKeyPress = (
-    e: NativeSyntheticEvent<{ key: string }>,
-    index: number,
-  ) => {
-    if (e.nativeEvent.key === 'Backspace' && !digits[index] && index > 0) {
-      const next = [...digits];
-      next[index - 1] = '';
-      setDigits(next);
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleVerify = useCallback(
-    async (code: string) => {
-      if (!phone) return;
-      setLoading(true);
-      try {
-        const deviceId = await tokenStorage.getDeviceId();
-        const res = await verifyOtp(phone, code, deviceId);
-        const { access, refresh, is_new_user } = res.data;
-        await signIn(access, refresh, is_new_user);
-      } catch (err: any) {
-        const errorCode = err?.response?.data?.error?.code;
-        let message = 'Попробуйте ещё раз';
-        if (errorCode === 'INVALID_OTP') message = 'Неверный код';
-        if (errorCode === 'OTP_EXPIRED') message = 'Код истёк. Запросите новый';
-        if (errorCode === 'MAX_ATTEMPTS_EXCEEDED') message = 'Превышено количество попыток. Запросите новый код';
-        if (errorCode === 'RATE_LIMITED') message = 'Слишком много попыток. Подождите немного';
-        Alert.alert('Ошибка', message);
-        setDigits(Array(CODE_LENGTH).fill(''));
-        inputRefs.current[0]?.focus();
-      } finally {
-        setLoading(false);
+  const handleVerify = useCallback(async (value: string) => {
+    if (!phone || value.length < 4) return;
+    setLoading(true);
+    setError('');
+    try {
+      const deviceId = await tokenStorage.getDeviceId();
+      const res = await verifyOtp(phone, value, deviceId);
+      const { access, refresh, is_new_user } = res.data;
+      await signIn(access, refresh, is_new_user);
+    } catch (err: any) {
+      const c = err?.response?.data?.error?.code;
+      const attempts = err?.response?.data?.error?.attempts_left;
+      if (c === 'INVALID_OTP') {
+        setError(attempts != null
+          ? `Неверный код. У вас осталось ${attempts} ${attempts === 1 ? 'попытка' : 'попытки'}`
+          : 'Неверный код');
+      } else if (c === 'OTP_EXPIRED') {
+        setError('Код истёк. Запросите новый');
+      } else if (c === 'MAX_ATTEMPTS_EXCEEDED') {
+        setError('Превышено допустимое количество попыток.\nПожалуйста, попробуйте позже');
+        setBlocked(true);
+      } else if (c === 'RATE_LIMITED') {
+        setError('Слишком много попыток. Подождите немного');
+      } else {
+        setError('Попробуйте ещё раз');
       }
-    },
-    [phone, signIn],
-  );
+      setCode('');
+    } finally {
+      setLoading(false);
+    }
+  }, [phone, signIn]);
+
+  const handleChange = (text: string) => {
+    const clean = text.replace(/\D/g, '').slice(0, 6);
+    setCode(clean);
+    setError('');
+    if (clean.length >= 4) handleVerify(clean);
+  };
 
   const handleResend = async () => {
-    if (!phone || timer > 0) return;
+    if (!phone || timer > 0 || blocked) return;
     try {
       await sendOtp(phone);
       setTimer(RESEND_TIMEOUT);
-      setDigits(Array(CODE_LENGTH).fill(''));
-      inputRefs.current[0]?.focus();
+      setCode('');
+      setError('');
+      setBlocked(false);
     } catch {
-      Alert.alert('Ошибка', 'Не удалось отправить код');
+      setError('Не удалось отправить код');
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Pressable style={styles.backButton} onPress={() => router.back()}>
-        <Text style={styles.backText}>← Назад</Text>
-      </Pressable>
-      <Text style={styles.title}>Введите код</Text>
-      <Text style={styles.subtitle}>
-        Отправили SMS на номер{'\n'}
-        <Text style={styles.phone}>{phone}</Text>
-      </Text>
-      <View style={styles.codeRow}>
-        {digits.map((digit, i) => (
+    <KeyboardAvoidingView style={S.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={S.inner}>
+
+        <Pressable style={S.back} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={22} color="#1A1A1A" />
+        </Pressable>
+
+        <Text style={S.title}>
+          {isRegister ? 'Подтверждение регистрации' : 'Введите код подтверждения'}
+        </Text>
+        <Text style={S.subtitle}>
+          {isRegister
+            ? 'Введите код из SMS, отправленного на указанный номер, чтобы подтвердить регистрацию нового аккаунта'
+            : 'Введите код из SMS, отправленного на указанный номер, чтобы войти в свой аккаунт'}
+        </Text>
+
+        <View style={[S.inputWrap, !!error && S.inputWrapError]}>
           <TextInput
-            key={i}
-            ref={(ref) => { inputRefs.current[i] = ref; }}
-            style={[styles.cell, digit ? styles.cellFilled : null]}
-            value={digit}
-            onChangeText={(text) => handleDigitChange(text, i)}
-            onKeyPress={(e) => handleKeyPress(e, i)}
+            style={S.input}
+            value={code}
+            onChangeText={handleChange}
+            placeholder="Введите код из SMS"
+            placeholderTextColor="#9CA3AF"
             keyboardType="number-pad"
-            maxLength={i === 0 ? CODE_LENGTH : 1}
-            editable={!loading}
-            selectTextOnFocus
-            autoFocus={i === 0}
-            textAlign="center"
+            autoFocus
+            editable={!loading && !blocked}
             textContentType="oneTimeCode"
             autoComplete="sms-otp"
+            maxLength={6}
           />
-        ))}
+          {loading && <ActivityIndicator color="#9CA3AF" size="small" />}
+        </View>
+
+        {!!error && <Text style={S.errorText}>{error}</Text>}
+
       </View>
-      {loading && <ActivityIndicator style={styles.loader} color="#7B61FF" size="large" />}
-      <Pressable
-        style={styles.resendButton}
-        onPress={handleResend}
-        disabled={timer > 0 || loading}
-      >
-        {timer > 0
-          ? <Text style={styles.timerText}>Отправить снова через <Text style={styles.timerCount}>{timer} с</Text></Text>
-          : <Text style={styles.resendText}>Отправить код повторно</Text>
-        }
-      </Pressable>
-    </View>
+
+      {/* Sticky кнопка внизу */}
+      <View style={S.bottomBar}>
+        {timer > 0 || blocked ? (
+          <View style={S.timerBtn}>
+            <Text style={S.timerText}>
+              {blocked ? 'Запросить код повторно' : `Запросить через ${pad(Math.floor(timer / 60))}:${pad(timer % 60)}`}
+            </Text>
+          </View>
+        ) : (
+          <Pressable style={S.btn} onPress={handleResend}>
+            <Text style={S.btnText}>Запросить код повторно</Text>
+          </Pressable>
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingHorizontal: 24, paddingTop: 60 },
-  backButton: { marginBottom: 32 },
-  backText: { fontSize: 16, color: '#7B61FF' },
-  title: { fontSize: 26, fontWeight: '700', color: '#1A1628', marginBottom: 8 },
-  subtitle: { fontSize: 15, color: '#7A7286', marginBottom: 40, lineHeight: 22 },
-  phone: { color: '#1A1628', fontWeight: '600' },
-  codeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 },
-  cell: {
-    width: 48, height: 56, borderWidth: 1.5, borderColor: '#E2DCF0',
-    borderRadius: 12, fontSize: 22, fontWeight: '700', color: '#1A1628', backgroundColor: '#FAFAFA',
+const S = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#fff' },
+  inner: { flex: 1, paddingHorizontal: 20, paddingTop: 56 },
+
+  back: { marginBottom: 28 },
+
+  title: { fontSize: 24, fontWeight: '700', color: '#1A1A1A', marginBottom: 12 },
+  subtitle: { fontSize: 14, color: '#6B7280', lineHeight: 20, marginBottom: 28 },
+
+  inputWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    height: 52, borderWidth: 1, borderColor: '#E5E5E5',
+    borderRadius: 12, paddingHorizontal: 14, backgroundColor: '#fff',
   },
-  cellFilled: { borderColor: '#7B61FF', backgroundColor: '#F3F0FF' },
-  loader: { marginBottom: 24 },
-  resendButton: { alignItems: 'center', paddingVertical: 12 },
-  timerText: { fontSize: 14, color: '#B0A8B9' },
-  timerCount: { fontWeight: '600', color: '#7A7286' },
-  resendText: { fontSize: 14, color: '#7B61FF', fontWeight: '600' },
+  inputWrapError: { borderColor: '#E53935' },
+  input: { flex: 1, fontSize: 18, color: '#1A1A1A', letterSpacing: 2 },
+  errorText: { fontSize: 13, color: '#E53935', marginTop: 6, lineHeight: 18 },
+
+  bottomBar: { paddingHorizontal: 20, paddingBottom: 40 },
+  btn: {
+    height: 52, borderRadius: 999, backgroundColor: '#1A1A1A',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  btnText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  timerBtn: {
+    height: 52, borderRadius: 999, backgroundColor: '#E5E5E5',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  timerText: { fontSize: 15, color: '#9CA3AF' },
 });

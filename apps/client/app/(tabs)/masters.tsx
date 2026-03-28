@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput,
   ActivityIndicator, RefreshControl, Pressable,
@@ -6,22 +6,80 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
-  MasterPreviewCard, getSpecialists, toggleFavorite, removeFavorite,
-  isMasterFavorited, SpecialistListItem,
+  getSpecialists, toggleFavorite, removeFavorite,
+  isMasterFavorited, getMe,
+  SpecialistListItem,
 } from '@beautygo/shared';
 
 const PAGE_SIZE = 10;
 
+function ratingColor(rating: number): string {
+  if (rating >= 4) return '#22C55E';
+  if (rating >= 3) return '#F59E0B';
+  return '#E53935';
+}
+
+function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} минут`;
+  if (m === 0) return `${h} ${h === 1 ? 'час' : 'часа'}`;
+  return `${h} ч ${m} мин`;
+}
+
+// ─── Master card ──────────────────────────────────────────────────────────────
+
+function MasterCard({ item, isFav, onFav, onPress }: {
+  item: SpecialistListItem;
+  isFav: boolean;
+  onFav: () => void;
+  onPress: () => void;
+}) {
+  const color = ratingColor(item.rating);
+  return (
+    <Pressable style={S.card} onPress={onPress}>
+      <View style={S.cardRow}>
+        <View style={S.avatar}>
+          <Text style={S.avatarText}>{item.first_name[0]}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <View style={S.nameRow}>
+            <Text style={S.masterName}>{item.first_name} {item.last_name[0]}.</Text>
+            <View style={S.ratingRow}>
+              <Ionicons name="star" size={13} color={color} />
+              <Text style={[S.ratingText, { color }]}>{item.rating.toFixed(1)}</Text>
+            </View>
+          </View>
+          {item.top_service && (
+            <Text style={S.serviceName} numberOfLines={2}>{item.top_service.name}</Text>
+          )}
+          <View style={S.metaRow}>
+            {item.top_service && (
+              <Text style={S.duration}>{formatDuration(item.top_service.duration_minutes)}</Text>
+            )}
+            {item.top_service && (
+              <Text style={S.price}>
+                {item.top_service.price.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽
+              </Text>
+            )}
+          </View>
+        </View>
+      </View>
+      <View style={S.separator} />
+    </Pressable>
+  );
+}
+
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
-function SkeletonCard() {
+function Skeleton() {
   return (
-    <View style={styles.skeletonCard}>
-      <View style={styles.skeletonAvatar} />
-      <View style={styles.skeletonInfo}>
-        <View style={[styles.skeletonLine, { width: '60%' }]} />
-        <View style={[styles.skeletonLine, { width: '40%', marginTop: 6 }]} />
-        <View style={[styles.skeletonLine, { width: '30%', marginTop: 6 }]} />
+    <View style={S.skeletonCard}>
+      <View style={S.skeletonAvatar} />
+      <View style={{ flex: 1, gap: 8 }}>
+        <View style={[S.skeletonLine, { width: '50%' }]} />
+        <View style={[S.skeletonLine, { width: '80%', height: 32 }]} />
+        <View style={[S.skeletonLine, { width: '40%' }]} />
       </View>
     </View>
   );
@@ -32,6 +90,7 @@ function SkeletonCard() {
 export default function HomeFeedScreen() {
   const router = useRouter();
 
+  const [userName, setUserName] = useState('');
   const [items, setItems] = useState<SpecialistListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -39,199 +98,188 @@ export default function HomeFeedScreen() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [search, setSearch] = useState('');
 
   const isFirstLoad = useRef(true);
 
-  const syncFavorites = useCallback((data: SpecialistListItem[]) => {
-    setFavorites(new Set(data.map(s => s.id).filter(isMasterFavorited)));
+  useEffect(() => {
+    getMe().then(u => {
+      const name = [u.first_name, u.last_name ? u.last_name[0] + '.' : ''].filter(Boolean).join(' ');
+      setUserName(name || u.phone);
+    }).catch(() => {});
   }, []);
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     else if (isFirstLoad.current) setLoading(true);
-
     try {
       const data = await getSpecialists(1, PAGE_SIZE);
       setItems(data.results);
       setPage(1);
       setHasMore(!!data.next);
-      syncFavorites(data.results);
+      setFavorites(new Set(data.results.map(s => s.id).filter(isMasterFavorited)));
     } finally {
       setLoading(false);
       setRefreshing(false);
       isFirstLoad.current = false;
     }
-  }, [syncFavorites]);
+  }, []);
 
-  useFocusEffect(useCallback(() => {
-    load();
-  }, [load]));
+  useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const loadMore = async () => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      const nextPage = page + 1;
-      const data = await getSpecialists(nextPage, PAGE_SIZE);
+      const next = page + 1;
+      const data = await getSpecialists(next, PAGE_SIZE);
       setItems(prev => {
         const ids = new Set(prev.map(s => s.id));
-        const fresh = data.results.filter(s => !ids.has(s.id));
-        return [...prev, ...fresh];
+        return [...prev, ...data.results.filter(s => !ids.has(s.id))];
       });
-      setPage(nextPage);
+      setPage(next);
       setHasMore(!!data.next);
-      syncFavorites(data.results);
     } finally {
       setLoadingMore(false);
     }
   };
 
   const handleFavorite = async (id: string) => {
-    const wasFavorite = favorites.has(id);
-    setFavorites(prev => {
-      const next = new Set(prev);
-      wasFavorite ? next.delete(id) : next.add(id);
-      return next;
-    });
+    const was = favorites.has(id);
+    setFavorites(prev => { const n = new Set(prev); was ? n.delete(id) : n.add(id); return n; });
     try {
-      if (wasFavorite) await removeFavorite(id);
-      else await toggleFavorite(id);
+      if (was) await removeFavorite(id); else await toggleFavorite(id);
     } catch {
-      setFavorites(prev => {
-        const next = new Set(prev);
-        wasFavorite ? next.add(id) : next.delete(id);
-        return next;
-      });
+      setFavorites(prev => { const n = new Set(prev); was ? n.add(id) : n.delete(id); return n; });
     }
   };
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.searchBar}>
-          <View style={[styles.skeletonLine, { flex: 1, height: 20, borderRadius: 10 }]} />
+      <View style={S.root}>
+        <View style={S.header}>
+          <View style={[S.skeletonLine, { width: 120, height: 16 }]} />
         </View>
-        {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
+        <View style={S.searchBar}>
+          <View style={[S.skeletonLine, { flex: 1, height: 18 }]} />
+        </View>
+        {[1, 2, 3].map(i => <Skeleton key={i} />)}
       </View>
     );
   }
 
-  const filtered = searchQuery.trim()
+  const filtered = search.trim()
     ? items.filter(s =>
-        `${s.first_name} ${s.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.top_service?.name.toLowerCase().includes(searchQuery.toLowerCase()),
-      )
+        `${s.first_name} ${s.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
+        s.top_service?.name.toLowerCase().includes(search.toLowerCase()))
     : items;
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={filtered}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.list}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => load(true)}
-            tintColor="#7B61FF"
-            colors={['#7B61FF']}
-          />
-        }
-        ListHeaderComponent={
-          <View style={styles.searchBar}>
-            <Ionicons name="search-outline" size={18} color="#B0A8B9" style={styles.searchIcon} />
+    <FlatList
+      style={S.root}
+      data={filtered}
+      keyExtractor={i => i.id}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor="#1A1A1A" />
+      }
+      onEndReached={loadMore}
+      onEndReachedThreshold={0.3}
+      ListHeaderComponent={
+        <>
+          {/* Header с именем */}
+          <View style={S.header}>
+            <View style={S.userAvatar}>
+              <Text style={S.userAvatarText}>{userName[0] ?? '?'}</Text>
+            </View>
+            <Text style={S.userName}>{userName || ' '}</Text>
+          </View>
+
+          {/* Search bar */}
+          <View style={S.searchBar}>
+            <Ionicons name="search-outline" size={18} color="#9CA3AF" />
             <TextInput
-              style={styles.searchInput}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Поиск мастеров и услуг..."
-              placeholderTextColor="#B0A8B9"
+              style={S.searchInput}
+              value={search}
+              onChangeText={setSearch}
+              placeholder="Поиск"
+              placeholderTextColor="#9CA3AF"
               returnKeyType="search"
-              clearButtonMode="while-editing"
             />
-            {searchQuery.length > 0 && (
-              <Pressable onPress={() => setSearchQuery('')} hitSlop={8}>
-                <Ionicons name="close-circle" size={16} color="#B0A8B9" />
-              </Pressable>
-            )}
+            <Pressable style={S.filterBtn}>
+              <Ionicons name="options-outline" size={18} color="#fff" />
+            </Pressable>
           </View>
-        }
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Ionicons name="people-outline" size={64} color="#C8C2E8" />
-            <Text style={styles.emptyTitle}>
-              {searchQuery ? 'Ничего не найдено' : 'Мастеров пока нет'}
-            </Text>
-            <Text style={styles.emptySubtitle}>
-              {searchQuery
-                ? 'Попробуйте другой запрос'
-                : 'Попробуйте позже — мастера скоро появятся'}
-            </Text>
-          </View>
-        }
-        ListFooterComponent={
-          loadingMore ? (
-            <ActivityIndicator color="#7B61FF" style={{ marginVertical: 16 }} />
-          ) : null
-        }
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.3}
-        renderItem={({ item }) => (
-          <MasterPreviewCard
-            name={`${item.first_name} ${item.last_name}`}
-            service={item.top_service?.name ?? 'Мастер'}
-            rating={item.rating}
-            price={item.top_service?.price}
-            duration_minutes={item.top_service?.duration_minutes}
-            distance_km={item.distance_km}
-            onPress={() => router.push(`/profile/${item.id}` as any)}
-            avatarPlaceholder={item.first_name[0]}
-            isFavorite={favorites.has(item.id)}
-            onFavorite={() => handleFavorite(item.id)}
-          />
-        )}
-      />
-    </View>
+        </>
+      }
+      ListEmptyComponent={
+        <View style={S.empty}>
+          <Text style={S.emptyTitle}>{search ? 'Ничего не найдено' : 'Мастеров пока нет'}</Text>
+          <Text style={S.emptySub}>{search ? 'Попробуйте другой запрос' : 'Попробуйте позже'}</Text>
+        </View>
+      }
+      ListFooterComponent={loadingMore ? <ActivityIndicator color="#1A1A1A" style={{ margin: 16 }} /> : null}
+      renderItem={({ item }) => (
+        <MasterCard
+          item={item}
+          isFav={favorites.has(item.id)}
+          onFav={() => handleFavorite(item.id)}
+          onPress={() => router.push(`/profile/${item.id}` as any)}
+        />
+      )}
+    />
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7F5FF' },
-  list: { paddingHorizontal: 16, paddingBottom: 16, gap: 10 },
+const S = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#fff' },
+
+  header: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingHorizontal: 16, paddingTop: 56, paddingBottom: 16,
+  },
+  userAvatar: {
+    width: 36, height: 36, borderRadius: 18, backgroundColor: '#E5E5E5',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  userAvatarText: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
+  userName: { fontSize: 16, fontWeight: '600', color: '#1A1A1A' },
 
   searchBar: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: 14,
-    paddingHorizontal: 12, height: 48,
-    marginBottom: 12, marginTop: 4,
-    borderWidth: 1, borderColor: '#F0EDF8',
-    shadowColor: '#7B61FF', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    marginHorizontal: 16, marginBottom: 8,
+    height: 44, backgroundColor: '#F5F5F5', borderRadius: 10, paddingHorizontal: 12,
   },
-  searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, fontSize: 15, color: '#1A1628' },
-
-  empty: {
+  searchInput: { flex: 1, fontSize: 15, color: '#1A1A1A' },
+  filterBtn: {
+    width: 32, height: 32, borderRadius: 8, backgroundColor: '#1A1A1A',
     alignItems: 'center', justifyContent: 'center',
-    paddingTop: 80, paddingHorizontal: 40, gap: 10,
   },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#1A1628' },
-  emptySubtitle: { fontSize: 14, color: '#7A7286', textAlign: 'center', lineHeight: 20 },
+
+  // Card
+  card: { paddingHorizontal: 16, paddingTop: 14 },
+  cardRow: { flexDirection: 'row', gap: 12 },
+  avatar: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: '#F0F0F0',
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  avatarText: { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
+  masterName: { fontSize: 14, fontWeight: '500', color: '#1A1A1A' },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  ratingText: { fontSize: 13, fontWeight: '600' },
+  serviceName: { fontSize: 15, fontWeight: '700', color: '#1A1A1A', lineHeight: 20, marginBottom: 6 },
+  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  duration: { fontSize: 13, color: '#9CA3AF' },
+  price: { fontSize: 14, fontWeight: '600', color: '#1A1A1A' },
+  separator: { height: 1, backgroundColor: '#F0F0F0', marginTop: 14 },
 
   // Skeleton
-  skeletonCard: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: 16, padding: 16,
-    marginHorizontal: 16, marginBottom: 10,
-    borderWidth: 1, borderColor: '#F0EDF8',
-  },
-  skeletonAvatar: {
-    width: 56, height: 56, borderRadius: 28,
-    backgroundColor: '#EDE8FF', marginRight: 14,
-  },
-  skeletonInfo: { flex: 1 },
-  skeletonLine: {
-    height: 14, borderRadius: 7, backgroundColor: '#EDE8FF',
-  },
+  skeletonCard: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 14 },
+  skeletonAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F0F0F0' },
+  skeletonLine: { height: 14, borderRadius: 7, backgroundColor: '#F0F0F0' },
+
+  empty: { alignItems: 'center', paddingTop: 80, gap: 8 },
+  emptyTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A1A' },
+  emptySub: { fontSize: 14, color: '#9CA3AF' },
 });
