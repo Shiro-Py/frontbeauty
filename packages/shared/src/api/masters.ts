@@ -1,6 +1,55 @@
 import { getApiClient } from './client';
 import { IS_MOCK } from './mock';
 
+// ─── Specialists feed ─────────────────────────────────────────────────────────
+
+export interface SpecialistListItem {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar_url?: string;
+  rating: number;
+  reviews_count: number;
+  distance_km?: number;
+  top_service?: {
+    name: string;
+    price: number;
+    duration_minutes: number;
+  };
+  is_favorited?: boolean;
+}
+
+export interface SpecialistsPage {
+  results: SpecialistListItem[];
+  count: number;
+  next: string | null;
+}
+
+const mockSpecialists: SpecialistListItem[] = [
+  { id: '1', first_name: 'Мария',   last_name: 'Иванова',  rating: 4.8, reviews_count: 134, distance_km: 0.8,  top_service: { name: 'Маникюр с гель-лаком',  price: 1800, duration_minutes: 90  } },
+  { id: '2', first_name: 'Ольга',   last_name: 'Смирнова', rating: 4.9, reviews_count: 87,  distance_km: 1.2,  top_service: { name: 'Массаж спины',           price: 2500, duration_minutes: 60  } },
+  { id: '3', first_name: 'Анна',    last_name: 'Петрова',  rating: 4.7, reviews_count: 52,  distance_km: 2.1,  top_service: { name: 'Стрижка и укладка',      price: 1500, duration_minutes: 75  } },
+  { id: '4', first_name: 'Елена',   last_name: 'Козлова',  rating: 5.0, reviews_count: 210, distance_km: 0.5,  top_service: { name: 'Коррекция бровей',       price: 800,  duration_minutes: 45  } },
+  { id: '5', first_name: 'Наталья', last_name: 'Морозова', rating: 4.6, reviews_count: 63,  distance_km: 3.4,  top_service: { name: 'Ламинирование ресниц',   price: 1200, duration_minutes: 60  } },
+  { id: '6', first_name: 'Светлана',last_name: 'Новикова', rating: 4.8, reviews_count: 99,  distance_km: 1.7,  top_service: { name: 'Педикюр с покрытием',    price: 1600, duration_minutes: 80  } },
+  { id: '7', first_name: 'Татьяна', last_name: 'Соколова', rating: 4.5, reviews_count: 41,  distance_km: 4.0,  top_service: { name: 'Восковая депиляция',     price: 900,  duration_minutes: 40  } },
+  { id: '8', first_name: 'Дарья',   last_name: 'Федорова', rating: 4.9, reviews_count: 175, distance_km: 0.9,  top_service: { name: 'Макияж дневной',         price: 2000, duration_minutes: 60  } },
+];
+
+export const getSpecialists = async (page = 1, pageSize = 10): Promise<SpecialistsPage> => {
+  if (IS_MOCK) {
+    const start = (page - 1) * pageSize;
+    const results = mockSpecialists.slice(start, start + pageSize).map(s => ({
+      ...s,
+      is_favorited: mockFavoritesStore.has(s.id),
+    }));
+    return { results, count: mockSpecialists.length, next: start + pageSize < mockSpecialists.length ? 'next' : null };
+  }
+  const api = getApiClient();
+  const { data } = await api.get<SpecialistsPage>(`/specialists/?page=${page}&page_size=${pageSize}`);
+  return data;
+};
+
 // In-memory store для mock-режима — общий на всё приложение
 const mockFavoritesStore = new Set<string>();
 
