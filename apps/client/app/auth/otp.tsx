@@ -1,13 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, TextInput, Pressable, StyleSheet,
-  ActivityIndicator, Alert, NativeSyntheticEvent, TextInputKeyPressEventData,
+  ActivityIndicator, Alert, NativeSyntheticEvent,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { sendOtp, verifyOtp, useAuth, tokenStorage } from '@beautygo/shared';
 
 const CODE_LENGTH = 6;
-const RESEND_TIMEOUT = 60;
+const RESEND_TIMEOUT = 30;
 
 export default function OtpScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
@@ -52,7 +52,7 @@ export default function OtpScreen() {
   };
 
   const handleKeyPress = (
-    e: NativeSyntheticEvent<TextInputKeyPressEventData>,
+    e: NativeSyntheticEvent<{ key: string }>,
     index: number,
   ) => {
     if (e.nativeEvent.key === 'Backspace' && !digits[index] && index > 0) {
