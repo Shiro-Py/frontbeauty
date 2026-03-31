@@ -29,7 +29,7 @@ export default function OtpScreen() {
   const pad = (n: number) => String(n).padStart(2, '0');
 
   const handleVerify = useCallback(async (value: string) => {
-    if (!phone || value.length < 4) return;
+    if (!phone || value.length < 6) return;
     setLoading(true);
     setError('');
     try {
@@ -64,7 +64,7 @@ export default function OtpScreen() {
     const clean = text.replace(/\D/g, '').slice(0, 6);
     setCode(clean);
     setError('');
-    if (clean.length >= 4) handleVerify(clean);
+    if (clean.length === 6) handleVerify(clean);
   };
 
   const handleResend = async () => {

@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, View, StyleSheet } from 'react-native';
+import { Pressable, View, StyleSheet, Image } from 'react-native';
 
 export default function TabLayout() {
   return (
@@ -38,7 +38,12 @@ export default function TabLayout() {
       <Tabs.Screen
         name="search"
         options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="location-outline" size={size} color={color} />,
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={require('../../assets/images/icon-location-star.png')}
+              style={{ width: 28, height: 28, tintColor: focused ? '#1A1A1A' : '#9CA3AF' }}
+            />
+          ),
         }}
       />
       <Tabs.Screen

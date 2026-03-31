@@ -1,0 +1,35 @@
+appId: ru.beautygo.client
+---
+# E2E тест: регистрация нового пользователя
+- launchApp:
+    clearState: true
+
+- assertVisible: "Добро пожаловать!"
+
+- tapOn: "Регистрация"
+- assertVisible: "Введите номер телефона"
+
+- tapOn: "Номер телефона"
+- inputText: "9009999999"
+- tapOn: "Продолжить"
+
+- assertVisible: "Подтверждение регистрации"
+- assertVisible: "Введите код из SMS"
+- tapOn:
+    text: "Введите код из SMS"
+- inputText: "123456"
+
+# Онбординг
+- assertVisible: "Укажите свои данные"
+- tapOn: "Ваше имя"
+- inputText: "Тест Юзер"
+- tapOn: "Соглашаюсь с правилами сервиса"
+
+- assertVisible: "Завершить регистрацию"
+- tapOn: "Завершить регистрацию"
+
+- assertVisible: "Регистрация завершена!"
+- tapOn: "Понятно"
+
+# Главный экран
+- assertVisible: "Поиск"

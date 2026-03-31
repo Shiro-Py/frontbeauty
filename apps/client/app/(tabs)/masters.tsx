@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput,
-  ActivityIndicator, RefreshControl, Pressable,
+  ActivityIndicator, RefreshControl, Pressable, Image,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -196,18 +196,23 @@ export default function HomeFeedScreen() {
           </View>
 
           {/* Search bar */}
-          <View style={S.searchBar}>
-            <Ionicons name="search-outline" size={18} color="#9CA3AF" />
-            <TextInput
-              style={S.searchInput}
-              value={search}
-              onChangeText={setSearch}
-              placeholder="Поиск"
-              placeholderTextColor="#9CA3AF"
-              returnKeyType="search"
-            />
+          <View style={S.searchRow}>
+            <View style={S.searchBar}>
+              <TextInput
+                style={S.searchInput}
+                value={search}
+                onChangeText={setSearch}
+                placeholder="Поиск"
+                placeholderTextColor="#9CA3AF"
+                returnKeyType="search"
+              />
+              <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+            </View>
             <Pressable style={S.filterBtn}>
-              <Ionicons name="options-outline" size={18} color="#fff" />
+              <Image
+                source={require('../../assets/images/icon-filter.png')}
+                style={{ width: 18, height: 18, tintColor: '#fff' }}
+              />
             </Pressable>
           </View>
         </>
@@ -245,14 +250,17 @@ const S = StyleSheet.create({
   userAvatarText: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
   userName: { fontSize: 16, fontWeight: '600', color: '#1A1A1A' },
 
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
+  searchRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
     marginHorizontal: 16, marginBottom: 8,
-    height: 44, backgroundColor: '#F5F5F5', borderRadius: 10, paddingHorizontal: 12,
+  },
+  searchBar: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10,
+    height: 44, backgroundColor: '#F5F5F5', borderRadius: 12, paddingHorizontal: 12,
   },
   searchInput: { flex: 1, fontSize: 15, color: '#1A1A1A' },
   filterBtn: {
-    width: 32, height: 32, borderRadius: 8, backgroundColor: '#1A1A1A',
+    width: 44, height: 44, borderRadius: 12, backgroundColor: '#1A1A1A',
     alignItems: 'center', justifyContent: 'center',
   },
 

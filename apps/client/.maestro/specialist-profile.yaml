@@ -1,0 +1,21 @@
+appId: ru.beautygo.client
+---
+# E2E тест: просмотр профиля мастера из ленты
+- launchApp
+
+# Убедимся что лента загружена (mock режим — мастера сразу видны)
+- assertVisible: "Поиск"
+
+# Нажимаем на первую карточку
+- tapOn:
+    index: 0
+    text: ".*И\.$"
+    regex: true
+
+# Экран профиля мастера
+- assertVisible: "Записаться"
+
+# Возврат
+- tapOn:
+    id: "back-button"
+- assertVisible: "Поиск"

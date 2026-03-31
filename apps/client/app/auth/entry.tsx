@@ -35,7 +35,7 @@ export default function EntryScreen() {
       {/* Логотип */}
       <View style={S.logoWrap}>
         <Image
-          source={require('../../assets/images/icon.png')}
+          source={require('../../assets/images/logo.png')}
           style={S.logo}
           resizeMode="contain"
         />

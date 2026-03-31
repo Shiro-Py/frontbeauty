@@ -1,0 +1,26 @@
+appId: ru.beautygo.client
+---
+# E2E тест: полный auth flow (login)
+- launchApp:
+    clearState: true
+
+- assertVisible: "Добро пожаловать!"
+
+- tapOn: "Авторизация"
+- assertVisible: "Введите номер телефона"
+- assertVisible: "Номер телефона"
+
+- tapOn: "Номер телефона"
+- inputText: "9001234567"
+
+- assertVisible: "Продолжить"
+- tapOn: "Продолжить"
+
+- assertVisible: "Введите код из SMS"
+
+- tapOn:
+    text: "Введите код из SMS"
+- inputText: "123456"
+
+# После успешного кода попадаем на главный экран
+- assertVisible: "Поиск"
