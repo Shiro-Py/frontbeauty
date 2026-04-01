@@ -26,6 +26,10 @@ export type { MasterDetail, MasterService, MasterReview, SpecialistListItem, Spe
 export { getServices, addService, updateService, deleteService } from './api/services';
 export type { Service, ServiceCreateData, ServiceUpdateData } from './api/services';
 
+// Reviews
+export { submitReview } from './api/reviews';
+export type { ReviewSubmit } from './api/reviews';
+
 // Components
 export { default as MasterPreviewCard } from './components/MasterPreviewCard';
 export { ProtectedRoute } from './components/ProtectedRoute';

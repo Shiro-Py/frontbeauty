@@ -76,4 +76,8 @@ export const handlers = [
   http.get(`${BASE}/specialists/:id/reviews/`, () =>
     HttpResponse.json({ results: [], count: 0, next: null }),
   ),
+
+  http.post(`${BASE}/reviews/`, () =>
+    HttpResponse.json({ id: 'review-1' }, { status: 201 }),
+  ),
 ];

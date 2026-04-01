@@ -280,15 +280,21 @@ export default function MasterProfileScreen() {
         <View style={{ height: 80 }} />
       </ScrollView>
 
-      {/* ── STICKY КНОПКА ЗАПИСАТЬСЯ ── */}
+      {/* ── STICKY КНОПКИ ── */}
       <View style={styles.bookingBar}>
-        <View style={styles.bookingInfo}>
-          {services.length > 0 && (
-            <Text style={styles.bookingPrice}>
-              от {Math.min(...services.map((s) => s.price)).toLocaleString('ru-RU')} ₽
-            </Text>
-          )}
-        </View>
+        <Pressable
+          style={styles.reviewBtn}
+          onPress={() => router.push({
+            pathname: '/review/[id]',
+            params: {
+              id: id!,
+              master_name: `${master.first_name} ${master.last_name}`,
+            },
+          } as any)}
+        >
+          <Ionicons name="star-outline" size={18} color="#1A1A1A" />
+          <Text style={styles.reviewBtnText}>Отзыв</Text>
+        </Pressable>
         <Pressable
           style={styles.bookingBtn}
           onPress={() => Alert.alert('Запись', 'Экран записи в разработке')}
@@ -397,16 +403,20 @@ const styles = StyleSheet.create({
   // Sticky кнопка
   bookingBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    flexDirection: 'row', alignItems: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 10,
     paddingHorizontal: 20, paddingBottom: 34, paddingTop: 14,
     backgroundColor: '#fff',
     borderTopWidth: 1, borderTopColor: '#F0EDF8',
     shadowColor: '#7B61FF', shadowOpacity: 0.08, shadowRadius: 12, elevation: 10,
   },
-  bookingInfo: { flex: 1 },
-  bookingPrice: { fontSize: 14, color: '#7A7286' },
+  reviewBtn: {
+    height: 50, paddingHorizontal: 18, borderRadius: 25,
+    borderWidth: 1.5, borderColor: '#1A1A1A',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+  },
+  reviewBtnText: { fontSize: 15, fontWeight: '600', color: '#1A1A1A' },
   bookingBtn: {
-    height: 50, paddingHorizontal: 32, borderRadius: 25,
+    flex: 1, height: 50, borderRadius: 25,
     backgroundColor: '#7B61FF', alignItems: 'center', justifyContent: 'center',
   },
   bookingBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
