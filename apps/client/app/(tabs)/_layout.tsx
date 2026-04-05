@@ -13,12 +13,26 @@ export default function TabLayout() {
         headerShown: false,
       }}
     >
+      {/* 1. Главная */}
       <Tabs.Screen
         name="masters"
         options={{
           tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
+      {/* 2. Поиск */}
+      <Tabs.Screen
+        name="search"
+        options={{
+          tabBarIcon: ({ focused }) => (
+            <Image
+              source={require('../../assets/images/icon-location-star.png')}
+              style={{ width: 28, height: 28, tintColor: focused ? '#1A1A1A' : '#9CA3AF' }}
+            />
+          ),
+        }}
+      />
+      {/* 3. Центр — большая кнопка */}
       <Tabs.Screen
         name="center"
         options={{
@@ -35,26 +49,22 @@ export default function TabLayout() {
           ),
         }}
       />
+      {/* 4. Записи */}
       <Tabs.Screen
-        name="search"
+        name="booking"
         options={{
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('../../assets/images/icon-location-star.png')}
-              style={{ width: 28, height: 28, tintColor: focused ? '#1A1A1A' : '#9CA3AF' }}
-            />
-          ),
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
         }}
       />
+      {/* 5. Профиль */}
       <Tabs.Screen
         name="profile"
         options={{
           tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
         }}
       />
-      {/* Скрытые экраны */}
+      {/* Скрытые */}
       <Tabs.Screen name="favorites" options={{ href: null }} />
-      <Tabs.Screen name="booking" options={{ href: null }} />
     </Tabs>
   );
 }
