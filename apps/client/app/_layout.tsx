@@ -44,6 +44,10 @@ function RootLayoutNav() {
       <Stack.Screen name="auth/onboarding" />
       <Stack.Screen name="profile/[id]" />
       <Stack.Screen name="review/[id]" />
+      <Stack.Screen name="booking/slots" />
+      <Stack.Screen name="booking/summary" />
+      <Stack.Screen name="booking/confirmation" />
+      <Stack.Screen name="booking/[id]" />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

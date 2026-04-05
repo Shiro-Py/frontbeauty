@@ -234,13 +234,28 @@ export default function MasterProfileScreen() {
                   {CATEGORY_LABELS[category] ?? category}
                 </Text>
                 {items.map((svc) => (
-                  <View key={svc.id} style={styles.serviceRow}>
+                  <Pressable
+                    key={svc.id}
+                    style={styles.serviceRow}
+                    onPress={() => router.push({
+                      pathname: '/booking/slots',
+                      params: {
+                        specialist_id: id!,
+                        specialist_name: `${master.first_name} ${master.last_name}`,
+                        service_id: svc.id,
+                        service_name: svc.name,
+                        service_price: String(svc.price),
+                        service_duration: String(svc.duration_minutes),
+                      },
+                    } as any)}
+                  >
                     <View style={{ flex: 1 }}>
                       <Text style={styles.serviceName}>{svc.name}</Text>
                       <Text style={styles.serviceDuration}>{formatDuration(svc.duration_minutes)}</Text>
                     </View>
                     <Text style={styles.servicePrice}>{svc.price.toLocaleString('ru-RU')} ₽</Text>
-                  </View>
+                    <Ionicons name="chevron-forward" size={16} color="#C8C2E8" style={{ marginLeft: 6 }} />
+                  </Pressable>
                 ))}
               </View>
             ))}
@@ -297,7 +312,21 @@ export default function MasterProfileScreen() {
         </Pressable>
         <Pressable
           style={styles.bookingBtn}
-          onPress={() => Alert.alert('Запись', 'Экран записи в разработке')}
+          onPress={() => {
+            const svc = services[0];
+            if (!svc) return Alert.alert('', 'У мастера нет доступных услуг');
+            router.push({
+              pathname: '/booking/slots',
+              params: {
+                specialist_id: id!,
+                specialist_name: `${master.first_name} ${master.last_name}`,
+                service_id: svc.id,
+                service_name: svc.name,
+                service_price: String(svc.price),
+                service_duration: String(svc.duration_minutes),
+              },
+            } as any);
+          }}
         >
           <Text style={styles.bookingBtnText}>Записаться</Text>
         </Pressable>

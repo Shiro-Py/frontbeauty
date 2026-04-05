@@ -30,6 +30,10 @@ export type { Service, ServiceCreateData, ServiceUpdateData } from './api/servic
 export { submitReview } from './api/reviews';
 export type { ReviewSubmit } from './api/reviews';
 
+// Bookings
+export { getSlots, createBooking, getBookings, getBookingById, cancelBooking } from './api/bookings';
+export type { TimeSlot, BookingCreate, Booking, BookingStatus } from './api/bookings';
+
 // Components
 export { default as MasterPreviewCard } from './components/MasterPreviewCard';
 export { ProtectedRoute } from './components/ProtectedRoute';
