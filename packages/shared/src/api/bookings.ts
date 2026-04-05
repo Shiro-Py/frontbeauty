@@ -14,7 +14,7 @@ export interface BookingCreate {
   date: string;
 }
 
-export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
 
 export interface Booking {
   id: string;
@@ -29,6 +29,13 @@ export interface Booking {
   status: BookingStatus;
   created_at: string;
   address?: string;
+  has_review?: boolean;
+}
+
+export interface AppointmentsPage {
+  results: Booking[];
+  count: number;
+  next: string | null;
 }
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
@@ -79,6 +86,8 @@ const mockBookingsStore: Booking[] = [
     time: '11:00',
     status: 'completed',
     created_at: new Date(Date.now() - 14 * 86400000).toISOString(),
+    address: 'пр. Ленина, 42',
+    has_review: false,
   },
   {
     id: 'b3',
@@ -91,6 +100,21 @@ const mockBookingsStore: Booking[] = [
     time: '16:00',
     status: 'cancelled',
     created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
+    address: 'ул. Пушкина, 8',
+  },
+  {
+    id: 'b4',
+    specialist_id: '8',
+    specialist_name: 'Дарья Федорова',
+    service_name: 'Макияж дневной',
+    service_price: 2000,
+    service_duration: 60,
+    date: daysFromNow(-30),
+    time: '10:00',
+    status: 'completed',
+    created_at: new Date(Date.now() - 35 * 86400000).toISOString(),
+    address: 'ул. Гагарина, 3',
+    has_review: true,
   },
 ];
 
@@ -139,6 +163,39 @@ export const getBookings = async (): Promise<Booking[]> => {
   }
   const api = getApiClient();
   const { data } = await api.get<{ results: Booking[] }>('/bookings/');
+  return data.results;
+};
+
+const PAST_STATUSES = ['completed', 'cancelled', 'no_show'];
+
+export const getPastAppointments = async (page = 1, pageSize = 20): Promise<AppointmentsPage> => {
+  if (IS_MOCK) {
+    await new Promise(r => setTimeout(r, 300));
+    const past = mockBookingsStore.filter(b => PAST_STATUSES.includes(b.status));
+    const start = (page - 1) * pageSize;
+    const results = past.slice(start, start + pageSize);
+    return {
+      results,
+      count: past.length,
+      next: start + pageSize < past.length ? 'next' : null,
+    };
+  }
+  const api = getApiClient();
+  const { data } = await api.get<AppointmentsPage>(
+    `/users/me/appointments/?status=completed,cancelled,no_show&page=${page}&page_size=${pageSize}`,
+  );
+  return data;
+};
+
+export const getUpcomingAppointments = async (): Promise<Booking[]> => {
+  if (IS_MOCK) {
+    await new Promise(r => setTimeout(r, 300));
+    return mockBookingsStore.filter(b => b.status === 'pending' || b.status === 'confirmed');
+  }
+  const api = getApiClient();
+  const { data } = await api.get<{ results: Booking[] }>(
+    '/users/me/appointments/?status=pending,confirmed',
+  );
   return data.results;
 };
 

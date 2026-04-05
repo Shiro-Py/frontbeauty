@@ -31,8 +31,8 @@ export { submitReview } from './api/reviews';
 export type { ReviewSubmit } from './api/reviews';
 
 // Bookings
-export { getSlots, createBooking, getBookings, getBookingById, cancelBooking } from './api/bookings';
-export type { TimeSlot, BookingCreate, Booking, BookingStatus } from './api/bookings';
+export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments } from './api/bookings';
+export type { TimeSlot, BookingCreate, Booking, BookingStatus, AppointmentsPage } from './api/bookings';
 
 // Components
 export { default as MasterPreviewCard } from './components/MasterPreviewCard';
