@@ -35,7 +35,7 @@ export default function OtpScreen() {
     try {
       const deviceId = await tokenStorage.getDeviceId();
       const res = await verifyOtp(phone, value, deviceId);
-      const { access, refresh, is_new_user } = res.data;
+      const { access, refresh, is_new_user } = res;
       await signIn(access, refresh, is_new_user);
     } catch (err: any) {
       const c = err?.response?.data?.error?.code;

@@ -22,7 +22,7 @@ describe('OTPScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockVerifyOtp.mockResolvedValue({
-      data: { access: 'access-token', refresh: 'refresh-token', is_new_user: false },
+      access: 'access-token', refresh: 'refresh-token', is_new_user: false,
     });
     mockSendOtp.mockResolvedValue(undefined);
   });

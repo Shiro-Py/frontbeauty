@@ -13,29 +13,25 @@ export interface UserProfile {
 }
 
 export interface VerifyOtpResponse {
-  data: {
-    access: string;
-    refresh: string;
-    is_new_user: boolean;
-    user?: {
-      id: string;
-      phone: string;
-      role: string;
-      is_verified: boolean;
-      first_name?: string;
-      last_name?: string;
-    };
+  access: string;
+  refresh: string;
+  is_new_user: boolean;
+  user?: {
+    id: string;
+    phone: string;
+    role: string;
+    is_verified: boolean;
+    first_name?: string;
+    last_name?: string;
   };
 }
 
 export interface RegisterResponse {
-  data: {
-    id: string;
-    phone: string;
-    first_name: string;
-    last_name: string;
-    role: string;
-  };
+  id: string;
+  phone: string;
+  first_name: string;
+  last_name: string;
+  role: string;
 }
 
 /**
@@ -48,7 +44,7 @@ export const sendOtp = async (phone: string): Promise<void> => {
     return;
   }
   const api = getApiClient();
-  await api.post('/auth/send-code/', { phone, purpose: 'login' });
+  await api.post('/auth/send-otp/', { phone });
 };
 
 /**
@@ -111,17 +107,15 @@ export const completeRegistration = async (
 ): Promise<RegisterResponse> => {
   if (IS_MOCK) {
     return {
-      data: {
-        id: 'mock_user_id',
-        phone: '',
-        first_name: firstName,
-        last_name: lastName,
-        role: 'client',
-      },
+      id: 'mock_user_id',
+      phone: '',
+      first_name: firstName,
+      last_name: lastName,
+      role: 'client',
     };
   }
   const api = getApiClient();
-  const { data } = await api.post<RegisterResponse>('/auth/register/', {
+  const { data } = await api.post<RegisterResponse>('/auth/complete-profile/', {
     first_name: firstName,
     last_name: lastName,
   });
@@ -264,6 +258,6 @@ export const deleteAccount = async (): Promise<void> => {
 export const getMe = async (): Promise<UserProfile> => {
   if (IS_MOCK) return mockProfile;
   const api = getApiClient();
-  const { data } = await api.get<UserProfile>('/auth/profile/me/');
+  const { data } = await api.get<UserProfile>('/auth/clients/me/');
   return data;
 };

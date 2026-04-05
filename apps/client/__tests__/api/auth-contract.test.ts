@@ -8,7 +8,7 @@
 jest.mock('../../../../packages/shared/src/api/mock', () => ({
   IS_MOCK: false,
   MOCK_CODE: '123456',
-  mockVerifyResponse: () => ({ data: { access: 'a', refresh: 'r', is_new_user: false } }),
+  mockVerifyResponse: () => ({ access: 'a', refresh: 'r', is_new_user: false }),
   mockProfile: { id: 'u1', phone: '+79001234567', first_name: 'Test', last_name: 'User', role: 'client' },
 }));
 
@@ -22,7 +22,7 @@ const BASE = 'https://dev.gobeauty.site/api/v1';
 let lastRequest: Request | null = null;
 
 const server = setupServer(
-  http.post(`${BASE}/auth/send-code/`, ({ request }) => {
+  http.post(`${BASE}/auth/send-otp/`, ({ request }) => {
     lastRequest = request;
     return HttpResponse.json({ message: 'ok' });
   }),
@@ -32,13 +32,13 @@ const server = setupServer(
     const body = (await request.json()) as { code: string };
     if (body.code === '123456') {
       return HttpResponse.json({
-        data: { access: 'test-access', refresh: 'test-refresh', is_new_user: false },
+        access: 'test-access', refresh: 'test-refresh', is_new_user: false,
       });
     }
     return HttpResponse.json({ error: { code: 'INVALID_OTP' } }, { status: 400 });
   }),
 
-  http.get(`${BASE}/auth/profile/me/`, ({ request }) => {
+  http.get(`${BASE}/auth/clients/me/`, ({ request }) => {
     lastRequest = request;
     return HttpResponse.json({ id: 'u1', phone: '+79001234567', role: 'client' });
   }),
@@ -63,7 +63,7 @@ describe('Auth API Contract', () => {
   it('sendOtp отправляет phone в теле', async () => {
     let body: any;
     server.use(
-      http.post(`${BASE}/auth/send-code/`, async ({ request }) => {
+      http.post(`${BASE}/auth/send-otp/`, async ({ request }) => {
         body = await request.json();
         return HttpResponse.json({ message: 'ok' });
       }),
@@ -77,9 +77,7 @@ describe('Auth API Contract', () => {
     server.use(
       http.post(`${BASE}/auth/verify-otp/`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({
-          data: { access: 'a', refresh: 'r', is_new_user: false },
-        });
+        return HttpResponse.json({ access: 'a', refresh: 'r', is_new_user: false });
       }),
     );
     await verifyOtp('+79001234567', '123456', 'device-123');
@@ -90,9 +88,9 @@ describe('Auth API Contract', () => {
 
   it('verifyOtp возвращает access и refresh при коде 123456', async () => {
     const res = await verifyOtp('+79001234567', '123456', 'device-id');
-    expect(res.data.access).toBe('test-access');
-    expect(res.data.refresh).toBe('test-refresh');
-    expect(typeof res.data.is_new_user).toBe('boolean');
+    expect(res.access).toBe('test-access');
+    expect(res.refresh).toBe('test-refresh');
+    expect(typeof res.is_new_user).toBe('boolean');
   });
 
   it('verifyOtp бросает ошибку INVALID_OTP при неверном коде', async () => {

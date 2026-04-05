@@ -4,7 +4,7 @@ const BASE = 'https://dev.gobeauty.site/api/v1';
 
 export const handlers = [
   // ── Auth ────────────────────────────────────────────────────────────────────
-  http.post(`${BASE}/auth/send-code/`, () =>
+  http.post(`${BASE}/auth/send-otp/`, () =>
     HttpResponse.json({ message: 'ok' }),
   ),
 
@@ -16,7 +16,7 @@ export const handlers = [
     const body = (await request.json()) as { phone: string; code: string; device_id: string };
     if (body.code === '123456') {
       return HttpResponse.json({
-        data: { access: 'test-access', refresh: 'test-refresh', is_new_user: false },
+        access: 'test-access', refresh: 'test-refresh', is_new_user: false,
       });
     }
     return HttpResponse.json({ error: { code: 'INVALID_OTP' } }, { status: 400 });
@@ -26,7 +26,7 @@ export const handlers = [
     HttpResponse.json({ access: 'refreshed-access', refresh: 'refreshed-refresh' }),
   ),
 
-  http.get(`${BASE}/auth/profile/me/`, () =>
+  http.get(`${BASE}/auth/clients/me/`, () =>
     HttpResponse.json({
       id: 'user-1',
       phone: '+79001234567',
