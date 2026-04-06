@@ -88,8 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_USER', payload: user });
         dispatch({ type: 'SET_AUTHORIZED' });
       } catch (error: any) {
-        if (!error.response) {
-          // Нет сети — считаем токен валидным, пускаем в приложение
+        if (!error.response || error.response.status !== 401) {
+          // Нет сети или сервер недоступен (5xx) — считаем токен валидным
           dispatch({ type: 'SET_AUTHORIZED' });
         }
         // 401: interceptor уже вызвал handleUnauthorized / handleDeviceMismatch
