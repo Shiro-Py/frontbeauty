@@ -1,6 +1,8 @@
 // Мок активен только в dev-сборке (__DEV__ = true в Expo Go / Metro)
 // В production-билде автоматически выключается
-export const IS_MOCK = __DEV__;
+// Переопределяется через EXPO_PUBLIC_USE_MOCK=false в apps/client/.env
+const _envMock = process.env.EXPO_PUBLIC_USE_MOCK;
+export const IS_MOCK = _envMock !== undefined ? _envMock !== 'false' : __DEV__;
 
 export const MOCK_CODE = '123456';
 
