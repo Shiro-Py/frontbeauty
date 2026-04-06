@@ -47,7 +47,7 @@ const _mockServices: Service[] = [
 export const getServices = async (): Promise<Service[]> => {
   if (IS_MOCK) return [..._mockServices].sort((a, b) => a.sort_order - b.sort_order);
   const api = getApiClient();
-  const { data } = await api.get<Service[]>('/services/');
+  const { data } = await api.get<Service[]>('/specialists/me/services');
   return data;
 };
 
@@ -75,12 +75,12 @@ export const addService = async (payload: ServiceCreateData): Promise<Service> =
     if (payload.description) form.append('description', payload.description);
     if (payload.buffer_after_minutes !== undefined) form.append('buffer_after_minutes', String(payload.buffer_after_minutes));
     form.append('image', payload.photo as any);
-    const { data } = await api.post<Service>('/services/', form, {
+    const { data } = await api.post<Service>('/specialists/me/services', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return data;
   }
-  const { data } = await api.post<Service>('/services/', payload);
+  const { data } = await api.post<Service>('/specialists/me/services', payload);
   return data;
 };
 
@@ -101,12 +101,12 @@ export const updateService = async (id: string, payload: ServiceUpdateData): Pro
     if (payload.category !== undefined) form.append('category', payload.category);
     if (payload.is_active !== undefined) form.append('is_active', String(payload.is_active));
     form.append('image', payload.photo as any);
-    const { data } = await api.patch<Service>(`/services/${id}/`, form, {
+    const { data } = await api.patch<Service>(`/specialists/me/services/${id}`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return data;
   }
-  const { data } = await api.patch<Service>(`/services/${id}/`, payload);
+  const { data } = await api.patch<Service>(`/specialists/me/services/${id}`, payload);
   return data;
 };
 
@@ -117,5 +117,5 @@ export const deleteService = async (id: string): Promise<void> => {
     return;
   }
   const api = getApiClient();
-  await api.delete(`/services/${id}/`);
+  await api.delete(`/specialists/me/services/${id}`);
 };
