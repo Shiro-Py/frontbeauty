@@ -32,7 +32,7 @@ export type { ReviewSubmit } from './api/reviews';
 
 // Bookings
 export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments } from './api/bookings';
-export type { SlotsResponse, BookingCreate, Booking, BookingStatus, AppointmentsPage } from './api/bookings';
+export type { SlotsResponse, BookingCreate, Booking, BookingStatus, AppointmentsPage, AppointmentWithDetails } from './api/bookings';
 
 // Components
 export { default as MasterPreviewCard } from './components/MasterPreviewCard';

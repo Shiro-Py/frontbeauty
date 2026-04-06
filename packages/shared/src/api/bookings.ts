@@ -37,6 +37,57 @@ export interface AppointmentsPage {
   next: string | null;
 }
 
+// Вложенная структура от GET /appointments (spec v2.0)
+export interface AppointmentWithDetails {
+  appointment: {
+    id: string;
+    specialist_id: string;
+    service_id: string;
+    start_datetime: string;
+    end_datetime: string;
+    status: BookingStatus;
+    price: number;
+    created_at: string;
+  };
+  specialist: {
+    id: string;
+    name: string;
+    avatar_url: string | null;
+    address: string;
+    phone: string;
+  };
+  service: {
+    id: string;
+    name: string;
+    duration_minutes: number;
+    price: number;
+  };
+  can_cancel: boolean;
+  can_reschedule: boolean;
+  review?: { id: string } | null;
+}
+
+function mapAppointment(detail: AppointmentWithDetails): Booking {
+  const { appointment, specialist, service } = detail;
+  const dt = new Date(appointment.start_datetime);
+  const time = `${String(dt.getHours()).padStart(2, '0')}:${String(dt.getMinutes()).padStart(2, '0')}`;
+  return {
+    id: appointment.id,
+    specialist_id: appointment.specialist_id,
+    specialist_name: specialist.name,
+    specialist_avatar: specialist.avatar_url ?? undefined,
+    service_name: service.name,
+    service_price: appointment.price,
+    service_duration: service.duration_minutes,
+    date: appointment.start_datetime.split('T')[0],
+    time,
+    status: appointment.status,
+    created_at: appointment.created_at,
+    address: specialist.address,
+    has_review: !!detail.review,
+  };
+}
+
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
 const MOCK_AVAILABLE_TIMES = [
@@ -178,8 +229,8 @@ export const getBookings = async (): Promise<Booking[]> => {
     return [...mockBookingsStore];
   }
   const api = getApiClient();
-  const { data } = await api.get<{ results: Booking[] }>('/bookings/');
-  return data.results;
+  const { data } = await api.get<{ results: AppointmentWithDetails[] }>('/appointments');
+  return data.results.map(mapAppointment);
 };
 
 const PAST_STATUSES = ['completed', 'cancelled', 'no_show'];
@@ -197,10 +248,10 @@ export const getPastAppointments = async (page = 1, pageSize = 20): Promise<Appo
     };
   }
   const api = getApiClient();
-  const { data } = await api.get<AppointmentsPage>(
-    `/users/me/appointments/?status=completed,cancelled,no_show&page=${page}&page_size=${pageSize}`,
+  const { data } = await api.get<{ results: AppointmentWithDetails[]; count: number; next: string | null }>(
+    `/appointments?status=completed,cancelled,no_show&page=${page}&page_size=${pageSize}`,
   );
-  return data;
+  return { results: data.results.map(mapAppointment), count: data.count, next: data.next };
 };
 
 const UPCOMING_STATUSES: BookingStatus[] = ['pending', 'awaiting_payment', 'confirmed'];
@@ -211,10 +262,10 @@ export const getUpcomingAppointments = async (): Promise<Booking[]> => {
     return mockBookingsStore.filter(b => UPCOMING_STATUSES.includes(b.status));
   }
   const api = getApiClient();
-  const { data } = await api.get<{ results: Booking[] }>(
-    '/users/me/appointments/?status=pending,awaiting_payment,confirmed',
+  const { data } = await api.get<{ results: AppointmentWithDetails[] }>(
+    '/appointments?upcoming=true',
   );
-  return data.results;
+  return data.results.map(mapAppointment);
 };
 
 export const getBookingById = async (id: string): Promise<Booking> => {
@@ -224,8 +275,8 @@ export const getBookingById = async (id: string): Promise<Booking> => {
     return { ...b };
   }
   const api = getApiClient();
-  const { data } = await api.get<Booking>(`/bookings/${id}/`);
-  return data;
+  const { data } = await api.get<AppointmentWithDetails>(`/appointments/${id}`);
+  return mapAppointment(data);
 };
 
 export const cancelBooking = async (bookingId: string): Promise<void> => {
@@ -236,5 +287,5 @@ export const cancelBooking = async (bookingId: string): Promise<void> => {
     return;
   }
   const api = getApiClient();
-  await api.post(`/bookings/${bookingId}/cancel/`);
+  await api.patch(`/appointments/${bookingId}/status`, { status: 'cancelled' });
 };
