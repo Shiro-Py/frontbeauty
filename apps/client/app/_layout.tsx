@@ -1,27 +1,19 @@
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 
 import { initializeApiClient, AuthProvider, useAuth } from '@beautygo/shared';
 
 // Инициализируем API клиент с X-App-Type: client
 initializeApiClient('client');
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({});
-
   useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) SplashScreen.hideAsync();
-  }, [loaded]);
-
-  if (!loaded) return null;
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
 
   return (
     <AuthProvider>
@@ -33,7 +25,13 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const { status } = useAuth();
 
-  if (status === 'loading') return null;
+  if (status === 'loading') {
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
+        <ActivityIndicator size="large" color="#7B61FF" />
+      </View>
+    );
+  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
