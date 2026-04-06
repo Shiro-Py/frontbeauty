@@ -19,52 +19,57 @@ function ratingColor(rating: number): string {
   return '#E53935';
 }
 
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m} минут`;
-  if (m === 0) return `${h} ${h === 1 ? 'час' : 'часа'}`;
-  return `${h} ч ${m} мин`;
-}
-
 // ─── Master card ──────────────────────────────────────────────────────────────
 
-function MasterCard({ item, isFav, onFav, onPress }: {
+function MasterCard({ item, onPress }: {
   item: SpecialistListItem;
   isFav: boolean;
   onFav: () => void;
   onPress: () => void;
 }) {
-  const color = ratingColor(item.rating);
+  const rColor = ratingColor(item.rating);
+  const services = item.top_services ?? (item.top_service ? [item.top_service] : []);
+
   return (
     <Pressable style={S.card} onPress={onPress}>
+      {/* Top row: avatar + name/meta */}
       <View style={S.cardRow}>
         <View style={S.avatar}>
           <Text style={S.avatarText}>{item.first_name[0]}</Text>
         </View>
-        <View style={{ flex: 1 }}>
-          <View style={S.nameRow}>
-            <Text style={S.masterName}>{item.first_name} {item.last_name[0]}.</Text>
-            <View style={S.ratingRow}>
-              <Ionicons name="star" size={13} color={color} />
-              <Text style={[S.ratingText, { color }]}>{item.rating.toFixed(1)}</Text>
-            </View>
-          </View>
-          {item.top_service && (
-            <Text style={S.serviceName} numberOfLines={2}>{item.top_service.name}</Text>
-          )}
+        <View style={S.cardMeta}>
+          <Text style={S.masterName} numberOfLines={1}>
+            {item.first_name} {item.last_name}
+          </Text>
           <View style={S.metaRow}>
-            {item.top_service && (
-              <Text style={S.duration}>{formatDuration(item.top_service.duration_minutes)}</Text>
-            )}
-            {item.top_service && (
-              <Text style={S.price}>
-                {item.top_service.price.toLocaleString('ru-RU', { minimumFractionDigits: 2 })} ₽
-              </Text>
+            <Ionicons name="star" size={12} color={rColor} />
+            <Text style={[S.ratingText, { color: rColor }]}>{item.rating.toFixed(1)}</Text>
+            <Text style={S.reviewsCount}>({item.reviews_count})</Text>
+            {item.distance_km != null && (
+              <>
+                <View style={S.dot} />
+                <Ionicons name="location-outline" size={12} color="#9CA3AF" />
+                <Text style={S.distanceText}>{item.distance_km.toFixed(1)} км</Text>
+              </>
             )}
           </View>
         </View>
       </View>
+
+      {/* Services list */}
+      {services.length > 0 && (
+        <View style={S.servicesList}>
+          {services.map((svc, i) => (
+            <View key={i} style={S.serviceRow}>
+              <Text style={S.serviceRowName} numberOfLines={1}>{svc.name}</Text>
+              <Text style={S.serviceRowPrice}>
+                от {svc.price.toLocaleString('ru-RU')} ₽
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       <View style={S.separator} />
     </Pressable>
   );
@@ -77,9 +82,11 @@ function Skeleton() {
     <View style={S.skeletonCard}>
       <View style={S.skeletonAvatar} />
       <View style={{ flex: 1, gap: 8 }}>
-        <View style={[S.skeletonLine, { width: '50%' }]} />
-        <View style={[S.skeletonLine, { width: '80%', height: 32 }]} />
-        <View style={[S.skeletonLine, { width: '40%' }]} />
+        <View style={[S.skeletonLine, { width: '45%', height: 15 }]} />
+        <View style={[S.skeletonLine, { width: '30%', height: 12 }]} />
+        <View style={[S.skeletonLine, { width: '90%', height: 12, marginTop: 6 }]} />
+        <View style={[S.skeletonLine, { width: '80%', height: 12 }]} />
+        <View style={[S.skeletonLine, { width: '70%', height: 12 }]} />
       </View>
     </View>
   );
@@ -168,10 +175,13 @@ export default function HomeFeedScreen() {
     );
   }
 
-  const filtered = search.trim()
-    ? items.filter(s =>
-        `${s.first_name} ${s.last_name}`.toLowerCase().includes(search.toLowerCase()) ||
-        s.top_service?.name.toLowerCase().includes(search.toLowerCase()))
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? items.filter(s => {
+        const name = `${s.first_name} ${s.last_name}`.toLowerCase();
+        const services = (s.top_services ?? (s.top_service ? [s.top_service] : []));
+        return name.includes(q) || services.some(sv => sv.name.toLowerCase().includes(q));
+      })
     : items;
 
   return (
@@ -266,20 +276,23 @@ const S = StyleSheet.create({
 
   // Card
   card: { paddingHorizontal: 16, paddingTop: 14 },
-  cardRow: { flexDirection: 'row', gap: 12 },
+  cardRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   avatar: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: '#F0F0F0',
+    width: 48, height: 48, borderRadius: 24, backgroundColor: '#F0F0F0',
     alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
-  avatarText: { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
-  nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
-  masterName: { fontSize: 14, fontWeight: '500', color: '#1A1A1A' },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  ratingText: { fontSize: 13, fontWeight: '600' },
-  serviceName: { fontSize: 15, fontWeight: '700', color: '#1A1A1A', lineHeight: 20, marginBottom: 6 },
-  metaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  duration: { fontSize: 13, color: '#9CA3AF' },
-  price: { fontSize: 14, fontWeight: '600', color: '#1A1A1A' },
+  avatarText: { fontSize: 18, fontWeight: '700', color: '#1A1A1A' },
+  cardMeta: { flex: 1, gap: 4 },
+  masterName: { fontSize: 15, fontWeight: '700', color: '#1A1A1A' },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  ratingText: { fontSize: 12, fontWeight: '700' },
+  reviewsCount: { fontSize: 12, color: '#9CA3AF' },
+  dot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: '#D1D5DB', marginHorizontal: 2 },
+  distanceText: { fontSize: 12, color: '#9CA3AF' },
+  servicesList: { marginTop: 10, gap: 6 },
+  serviceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  serviceRowName: { fontSize: 13, color: '#4B5563', flex: 1, marginRight: 8 },
+  serviceRowPrice: { fontSize: 13, fontWeight: '600', color: '#1A1A1A', flexShrink: 0 },
   separator: { height: 1, backgroundColor: '#F0F0F0', marginTop: 14 },
 
   // Skeleton

@@ -36,8 +36,7 @@ function useSocialHandler() {
   const handleResult = useCallback(
     async (result: SocialAuthResult) => {
       await tokenStorage.save(result.access, result.refresh);
-      // has_profile: false → новый пользователь → онбординг
-      await signIn(result.access, result.refresh, !result.has_profile);
+      await signIn(result.access, result.refresh, result.is_new_user);
     },
     [signIn],
   );
@@ -186,7 +185,7 @@ export function useYandexAuth() {
     {
       clientId: process.env.EXPO_PUBLIC_YANDEX_CLIENT_ID ?? '',
       redirectUri,
-      responseType: AuthSession.ResponseType.Code,
+      responseType: AuthSession.ResponseType.Token,
       usePKCE: false,
     },
     YANDEX_DISCOVERY,
@@ -194,11 +193,11 @@ export function useYandexAuth() {
 
   useEffect(() => {
     if (response?.type !== 'success') return;
-    const code = response.params.code;
-    if (!code) return;
+    const token = response.params.access_token;
+    if (!token) return;
     setLoading(true);
     setError(null);
-    postYandexAuth(code)
+    postYandexAuth(token)
       .then(handleResult)
       .catch((e) => setError(parseSocialError(e)))
       .finally(() => setLoading(false));

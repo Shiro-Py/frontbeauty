@@ -90,11 +90,11 @@ export const updateClientProfile = async (data: ClientProfileUpdate): Promise<vo
     if (data.last_name) formData.append('last_name', data.last_name);
     if (data.city) formData.append('city', data.city);
     formData.append('avatar', data.avatar as any);
-    await api.patch('/clients/me/', formData, {
+    await api.patch('/auth/clients/me/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   } else {
-    await api.patch('/clients/me/', data);
+    await api.patch('/auth/clients/me/', data);
   }
 };
 

@@ -16,6 +16,11 @@ export interface SpecialistListItem {
     price: number;
     duration_minutes: number;
   };
+  top_services?: Array<{
+    name: string;
+    price: number;
+    duration_minutes: number;
+  }>;
   is_favorited?: boolean;
 }
 
@@ -26,14 +31,78 @@ export interface SpecialistsPage {
 }
 
 const mockSpecialists: SpecialistListItem[] = [
-  { id: '1', first_name: 'Мария',   last_name: 'Иванова',  rating: 4.8, reviews_count: 134, distance_km: 0.8,  top_service: { name: 'Маникюр с гель-лаком',  price: 1800, duration_minutes: 90  } },
-  { id: '2', first_name: 'Ольга',   last_name: 'Смирнова', rating: 4.9, reviews_count: 87,  distance_km: 1.2,  top_service: { name: 'Массаж спины',           price: 2500, duration_minutes: 60  } },
-  { id: '3', first_name: 'Анна',    last_name: 'Петрова',  rating: 4.7, reviews_count: 52,  distance_km: 2.1,  top_service: { name: 'Стрижка и укладка',      price: 1500, duration_minutes: 75  } },
-  { id: '4', first_name: 'Елена',   last_name: 'Козлова',  rating: 5.0, reviews_count: 210, distance_km: 0.5,  top_service: { name: 'Коррекция бровей',       price: 800,  duration_minutes: 45  } },
-  { id: '5', first_name: 'Наталья', last_name: 'Морозова', rating: 4.6, reviews_count: 63,  distance_km: 3.4,  top_service: { name: 'Ламинирование ресниц',   price: 1200, duration_minutes: 60  } },
-  { id: '6', first_name: 'Светлана',last_name: 'Новикова', rating: 4.8, reviews_count: 99,  distance_km: 1.7,  top_service: { name: 'Педикюр с покрытием',    price: 1600, duration_minutes: 80  } },
-  { id: '7', first_name: 'Татьяна', last_name: 'Соколова', rating: 4.5, reviews_count: 41,  distance_km: 4.0,  top_service: { name: 'Восковая депиляция',     price: 900,  duration_minutes: 40  } },
-  { id: '8', first_name: 'Дарья',   last_name: 'Федорова', rating: 4.9, reviews_count: 175, distance_km: 0.9,  top_service: { name: 'Макияж дневной',         price: 2000, duration_minutes: 60  } },
+  {
+    id: '1', first_name: 'Мария', last_name: 'Иванова', rating: 4.8, reviews_count: 134, distance_km: 0.8,
+    top_service: { name: 'Маникюр с гель-лаком', price: 1800, duration_minutes: 90 },
+    top_services: [
+      { name: 'Маникюр с гель-лаком', price: 1800, duration_minutes: 90 },
+      { name: 'Маникюр классический', price: 1200, duration_minutes: 60 },
+      { name: 'Педикюр', price: 1500, duration_minutes: 75 },
+    ],
+  },
+  {
+    id: '2', first_name: 'Ольга', last_name: 'Смирнова', rating: 4.9, reviews_count: 87, distance_km: 1.2,
+    top_service: { name: 'Массаж спины', price: 2500, duration_minutes: 60 },
+    top_services: [
+      { name: 'Массаж спины', price: 2500, duration_minutes: 60 },
+      { name: 'Массаж шеи и плеч', price: 1500, duration_minutes: 40 },
+      { name: 'Массаж всего тела', price: 4000, duration_minutes: 90 },
+    ],
+  },
+  {
+    id: '3', first_name: 'Анна', last_name: 'Петрова', rating: 4.7, reviews_count: 52, distance_km: 2.1,
+    top_service: { name: 'Стрижка и укладка', price: 1500, duration_minutes: 75 },
+    top_services: [
+      { name: 'Стрижка и укладка', price: 1500, duration_minutes: 75 },
+      { name: 'Окрашивание', price: 3500, duration_minutes: 120 },
+      { name: 'Ламинирование волос', price: 2000, duration_minutes: 90 },
+    ],
+  },
+  {
+    id: '4', first_name: 'Елена', last_name: 'Козлова', rating: 5.0, reviews_count: 210, distance_km: 0.5,
+    top_service: { name: 'Коррекция бровей', price: 800, duration_minutes: 45 },
+    top_services: [
+      { name: 'Коррекция бровей', price: 800, duration_minutes: 45 },
+      { name: 'Ламинирование бровей', price: 1400, duration_minutes: 60 },
+      { name: 'Перманентный макияж', price: 5000, duration_minutes: 120 },
+    ],
+  },
+  {
+    id: '5', first_name: 'Наталья', last_name: 'Морозова', rating: 4.6, reviews_count: 63, distance_km: 3.4,
+    top_service: { name: 'Ламинирование ресниц', price: 1200, duration_minutes: 60 },
+    top_services: [
+      { name: 'Ламинирование ресниц', price: 1200, duration_minutes: 60 },
+      { name: 'Наращивание ресниц', price: 2500, duration_minutes: 120 },
+      { name: 'Биозавивка ресниц', price: 1800, duration_minutes: 90 },
+    ],
+  },
+  {
+    id: '6', first_name: 'Светлана', last_name: 'Новикова', rating: 4.8, reviews_count: 99, distance_km: 1.7,
+    top_service: { name: 'Педикюр с покрытием', price: 1600, duration_minutes: 80 },
+    top_services: [
+      { name: 'Педикюр с покрытием', price: 1600, duration_minutes: 80 },
+      { name: 'Аппаратный педикюр', price: 2200, duration_minutes: 90 },
+      { name: 'СПА-педикюр', price: 2800, duration_minutes: 100 },
+    ],
+  },
+  {
+    id: '7', first_name: 'Татьяна', last_name: 'Соколова', rating: 4.5, reviews_count: 41, distance_km: 4.0,
+    top_service: { name: 'Восковая депиляция', price: 900, duration_minutes: 40 },
+    top_services: [
+      { name: 'Восковая депиляция', price: 900, duration_minutes: 40 },
+      { name: 'Шугаринг', price: 1100, duration_minutes: 45 },
+      { name: 'Лазерная эпиляция', price: 2000, duration_minutes: 30 },
+    ],
+  },
+  {
+    id: '8', first_name: 'Дарья', last_name: 'Федорова', rating: 4.9, reviews_count: 175, distance_km: 0.9,
+    top_service: { name: 'Макияж дневной', price: 2000, duration_minutes: 60 },
+    top_services: [
+      { name: 'Макияж дневной', price: 2000, duration_minutes: 60 },
+      { name: 'Макияж вечерний', price: 3500, duration_minutes: 90 },
+      { name: 'Свадебный макияж', price: 6000, duration_minutes: 120 },
+    ],
+  },
 ];
 
 export const getSpecialists = async (page = 1, pageSize = 10): Promise<SpecialistsPage> => {
