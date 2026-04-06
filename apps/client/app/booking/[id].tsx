@@ -25,24 +25,30 @@ function formatDuration(minutes: number): string {
 }
 
 const STATUS_LABEL: Record<BookingStatus, string> = {
-  pending:   'Ожидает подтверждения',
-  confirmed: 'Подтверждена',
-  completed: 'Завершена',
-  cancelled: 'Отменена',
+  pending:          'Ожидает подтверждения',
+  awaiting_payment: 'Ожидает оплаты',
+  confirmed:        'Подтверждена',
+  completed:        'Завершена',
+  cancelled:        'Отменена',
+  no_show:          'Не пришёл',
 };
 
 const STATUS_ICON: Record<BookingStatus, any> = {
-  pending:   'time-outline',
-  confirmed: 'checkmark-circle-outline',
-  completed: 'checkmark-done-circle-outline',
-  cancelled: 'close-circle-outline',
+  pending:          'time-outline',
+  awaiting_payment: 'card-outline',
+  confirmed:        'checkmark-circle-outline',
+  completed:        'checkmark-done-circle-outline',
+  cancelled:        'close-circle-outline',
+  no_show:          'alert-circle-outline',
 };
 
 const STATUS_COLOR: Record<BookingStatus, string> = {
-  pending:   '#F59E0B',
-  confirmed: '#22C55E',
-  completed: '#7B61FF',
-  cancelled: '#EF4444',
+  pending:          '#F59E0B',
+  awaiting_payment: '#3B82F6',
+  confirmed:        '#22C55E',
+  completed:        '#7B61FF',
+  cancelled:        '#EF4444',
+  no_show:          '#9CA3AF',
 };
 
 function InfoRow({ icon, label, value }: { icon: any; label: string; value: string }) {
@@ -94,8 +100,13 @@ export default function BookingDetailScreen() {
             try {
               await cancelBooking(id!);
               setBooking(prev => prev ? { ...prev, status: 'cancelled' } : null);
-            } catch {
-              Alert.alert('Ошибка', 'Не удалось отменить запись');
+            } catch (e: any) {
+              const code = e?.response?.data?.error?.code;
+              if (code === 'CANCELLATION_NOT_ALLOWED') {
+                Alert.alert('Отмена недоступна', 'Политика отмены не позволяет отменить эту запись');
+              } else {
+                Alert.alert('Ошибка', 'Не удалось отменить запись');
+              }
             } finally {
               setCancelling(false);
             }
@@ -115,7 +126,7 @@ export default function BookingDetailScreen() {
 
   if (!booking) return null;
 
-  const canCancel = booking.status === 'pending' || booking.status === 'confirmed';
+  const canCancel = booking.status === 'awaiting_payment' || booking.status === 'confirmed';
   const color = STATUS_COLOR[booking.status];
 
   return (

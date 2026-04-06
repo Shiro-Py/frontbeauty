@@ -14,7 +14,7 @@ export interface BookingCreate {
   date: string;
 }
 
-export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+export type BookingStatus = 'pending' | 'awaiting_payment' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
 
 export interface Booking {
   id: string;
@@ -62,6 +62,19 @@ function daysFromNow(n: number): string {
 }
 
 const mockBookingsStore: Booking[] = [
+  {
+    id: 'b0',
+    specialist_id: '3',
+    specialist_name: 'Анна Петрова',
+    service_name: 'Стрижка и укладка',
+    service_price: 1500,
+    service_duration: 75,
+    date: daysFromNow(1),
+    time: '12:00',
+    status: 'awaiting_payment',
+    created_at: new Date().toISOString(),
+    address: 'ул. Тверская, 10',
+  },
   {
     id: 'b1',
     specialist_id: '1',
@@ -152,7 +165,10 @@ export const createBooking = async (
     return booking;
   }
   const api = getApiClient();
-  const { data } = await api.post<Booking>('/bookings/', payload);
+  const idempotencyKey = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const { data } = await api.post<Booking>('/bookings/', payload, {
+    headers: { 'X-Idempotency-Key': idempotencyKey },
+  });
   return data;
 };
 
@@ -187,14 +203,16 @@ export const getPastAppointments = async (page = 1, pageSize = 20): Promise<Appo
   return data;
 };
 
+const UPCOMING_STATUSES: BookingStatus[] = ['pending', 'awaiting_payment', 'confirmed'];
+
 export const getUpcomingAppointments = async (): Promise<Booking[]> => {
   if (IS_MOCK) {
     await new Promise(r => setTimeout(r, 300));
-    return mockBookingsStore.filter(b => b.status === 'pending' || b.status === 'confirmed');
+    return mockBookingsStore.filter(b => UPCOMING_STATUSES.includes(b.status));
   }
   const api = getApiClient();
   const { data } = await api.get<{ results: Booking[] }>(
-    '/users/me/appointments/?status=pending,confirmed',
+    '/users/me/appointments/?status=pending,awaiting_payment,confirmed',
   );
   return data.results;
 };

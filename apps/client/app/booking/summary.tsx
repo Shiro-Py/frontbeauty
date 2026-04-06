@@ -73,8 +73,16 @@ export default function BookingSummaryScreen() {
           price: params.service_price,
         },
       } as any);
-    } catch {
-      Alert.alert('Ошибка', 'Не удалось создать запись. Попробуйте снова.');
+    } catch (e: any) {
+      const code = e?.response?.data?.error?.code;
+      const status = e?.response?.status;
+      if (status === 409 || code === 'SLOT_NOT_AVAILABLE') {
+        Alert.alert('Слот занят', 'Это время уже забронировано. Выберите другой слот.', [
+          { text: 'Выбрать другое время', onPress: () => router.back() },
+        ]);
+      } else {
+        Alert.alert('Ошибка', 'Не удалось создать запись. Попробуйте снова.');
+      }
     } finally {
       setLoading(false);
     }

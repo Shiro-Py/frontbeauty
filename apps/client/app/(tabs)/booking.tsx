@@ -23,19 +23,21 @@ function formatDate(iso: string): string {
 }
 
 const STATUS_LABEL: Record<BookingStatus, string> = {
-  pending:   'Ожидает',
-  confirmed: 'Подтверждена',
-  completed: 'Завершено',
-  cancelled: 'Отменено',
-  no_show:   'Не пришёл',
+  pending:          'Ожидает',
+  awaiting_payment: 'Ожидает оплаты',
+  confirmed:        'Подтверждена',
+  completed:        'Завершено',
+  cancelled:        'Отменено',
+  no_show:          'Не пришёл',
 };
 
 const STATUS_COLOR: Record<BookingStatus, string> = {
-  pending:   '#F59E0B',
-  confirmed: '#7B61FF',
-  completed: '#22C55E',
-  cancelled: '#EF4444',
-  no_show:   '#9CA3AF',
+  pending:          '#F59E0B',
+  awaiting_payment: '#3B82F6',
+  confirmed:        '#7B61FF',
+  completed:        '#22C55E',
+  cancelled:        '#EF4444',
+  no_show:          '#9CA3AF',
 };
 
 type Tab = 'upcoming' | 'past';
