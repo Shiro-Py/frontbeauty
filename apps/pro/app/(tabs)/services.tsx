@@ -22,6 +22,11 @@ const CATEGORIES: { id: string; label: string; color: string }[] = [
 ];
 
 const VALID_DURATIONS = [15, 30, 45, 60, 75, 90, 105, 120, 150, 180, 210, 240];
+const BUFFER_OPTIONS = [0, 5, 10, 15, 20, 30];
+
+function bufferLabel(min: number) {
+  return min === 0 ? 'Нет' : `${min} мин`;
+}
 
 function getCat(id: string) {
   return CATEGORIES.find(c => c.id === id) ?? { label: 'Другое', color: '#94A3B8' };
@@ -38,14 +43,16 @@ function durationLabel(min: number) {
 
 interface FormState {
   name: string;
+  description: string;
   price: string;
   duration: string;
+  buffer: string;
   category: string;
   photoUri: string | null;
 }
 
 const emptyForm = (): FormState => ({
-  name: '', price: '', duration: '60', category: 'hair', photoUri: null,
+  name: '', description: '', price: '', duration: '60', buffer: '0', category: 'hair', photoUri: null,
 });
 
 function validateForm(f: FormState): string | null {
@@ -74,7 +81,15 @@ function ServiceModal({ visible, initial, onClose, onSave }: ServiceModalProps) 
   useEffect(() => {
     if (visible) {
       setForm(initial
-        ? { name: initial.name, price: String(initial.price), duration: String(initial.duration_minutes), category: initial.category, photoUri: initial.photo ?? null }
+        ? {
+            name: initial.name,
+            description: initial.description ?? '',
+            price: String(initial.price),
+            duration: String(initial.duration_minutes),
+            buffer: String(initial.buffer_after_minutes ?? 0),
+            category: initial.category,
+            photoUri: initial.photo ?? null,
+          }
         : emptyForm()
       );
       Animated.spring(slideAnim, { toValue: 0, tension: 65, friction: 11, useNativeDriver: true }).start();
@@ -143,6 +158,19 @@ function ServiceModal({ visible, initial, onClose, onSave }: ServiceModalProps) 
               <Text style={styles.errorText}>Минимум 3 символа</Text>
             )}
 
+            {/* Описание */}
+            <Text style={styles.formLabel}>Описание</Text>
+            <TextInput
+              style={[styles.formInput, styles.formInputMultiline]}
+              value={form.description}
+              onChangeText={v => patch('description', v)}
+              placeholder="Опишите услугу подробнее (необязательно)"
+              placeholderTextColor="#8A80C0"
+              multiline
+              maxLength={500}
+              textAlignVertical="top"
+            />
+
             {/* Цена */}
             <Text style={styles.formLabel}>Цена (₽) <Text style={styles.req}>*</Text></Text>
             <TextInput
@@ -165,6 +193,23 @@ function ServiceModal({ visible, initial, onClose, onSave }: ServiceModalProps) 
                 >
                   <Text style={[styles.durationChipText, form.duration === String(d) && { color: '#fff' }]}>
                     {durationLabel(d)}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            {/* Перерыв */}
+            <Text style={styles.formLabel}>Перерыв после услуги</Text>
+            <Text style={styles.formHint}>Время на уборку и подготовку к следующему клиенту</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
+              {BUFFER_OPTIONS.map(b => (
+                <Pressable
+                  key={b}
+                  style={[styles.durationChip, form.buffer === String(b) && styles.durationChipActive]}
+                  onPress={() => patch('buffer', String(b))}
+                >
+                  <Text style={[styles.durationChipText, form.buffer === String(b) && { color: '#fff' }]}>
+                    {bufferLabel(b)}
                   </Text>
                 </Pressable>
               ))}
@@ -291,8 +336,10 @@ export default function ServicesScreen() {
   const handleSave = async (form: FormState) => {
     const payload = {
       name: form.name.trim(),
+      description: form.description.trim() || undefined,
       price: parseInt(form.price, 10),
       duration_minutes: parseInt(form.duration, 10),
+      buffer_after_minutes: parseInt(form.buffer, 10),
       category: form.category,
       ...(form.photoUri ? { photo: { uri: form.photoUri, name: 'photo.jpg', type: 'image/jpeg' } } : {}),
     };
@@ -465,6 +512,10 @@ const styles = StyleSheet.create({
     height: 50, borderWidth: 1.5, borderColor: '#C8C2E8', borderRadius: 12,
     paddingHorizontal: 14, fontSize: 15, color: '#1A1628', backgroundColor: '#FAFAFA', marginBottom: 16,
   },
+  formInputMultiline: {
+    height: 90, paddingTop: 12, paddingBottom: 12,
+  },
+  formHint: { fontSize: 12, color: '#9B92D0', marginBottom: 8, marginTop: -4 },
   inputValid: { borderColor: '#4A3DB0' },
   errorText: { fontSize: 12, color: '#FF6B6B', marginBottom: 8, marginLeft: 4 },
 

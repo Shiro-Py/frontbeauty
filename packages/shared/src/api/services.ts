@@ -4,8 +4,10 @@ import { IS_MOCK } from './mock';
 export interface Service {
   id: string;
   name: string;
+  description?: string | null;
   price: number;
   duration_minutes: number;
+  buffer_after_minutes?: number;
   category: string;
   is_active: boolean;
   sort_order: number;
@@ -14,16 +16,20 @@ export interface Service {
 
 export interface ServiceCreateData {
   name: string;
+  description?: string;
   price: number;
   duration_minutes: number;
+  buffer_after_minutes?: number;
   category: string;
   photo?: { uri: string; name: string; type: string };
 }
 
 export interface ServiceUpdateData {
   name?: string;
+  description?: string;
   price?: number;
   duration_minutes?: number;
+  buffer_after_minutes?: number;
   category?: string;
   is_active?: boolean;
   sort_order?: number;
@@ -66,7 +72,9 @@ export const addService = async (payload: ServiceCreateData): Promise<Service> =
     form.append('price', String(payload.price));
     form.append('duration_minutes', String(payload.duration_minutes));
     form.append('category', payload.category);
-    form.append('photo', payload.photo as any);
+    if (payload.description) form.append('description', payload.description);
+    if (payload.buffer_after_minutes !== undefined) form.append('buffer_after_minutes', String(payload.buffer_after_minutes));
+    form.append('image', payload.photo as any);
     const { data } = await api.post<Service>('/services/', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -86,11 +94,13 @@ export const updateService = async (id: string, payload: ServiceUpdateData): Pro
   if (payload.photo) {
     const form = new FormData();
     if (payload.name !== undefined) form.append('name', payload.name);
+    if (payload.description !== undefined) form.append('description', payload.description);
     if (payload.price !== undefined) form.append('price', String(payload.price));
     if (payload.duration_minutes !== undefined) form.append('duration_minutes', String(payload.duration_minutes));
+    if (payload.buffer_after_minutes !== undefined) form.append('buffer_after_minutes', String(payload.buffer_after_minutes));
     if (payload.category !== undefined) form.append('category', payload.category);
     if (payload.is_active !== undefined) form.append('is_active', String(payload.is_active));
-    form.append('photo', payload.photo as any);
+    form.append('image', payload.photo as any);
     const { data } = await api.patch<Service>(`/services/${id}/`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
