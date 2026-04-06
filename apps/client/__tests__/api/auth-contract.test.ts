@@ -22,9 +22,9 @@ const BASE = 'https://dev.gobeauty.site/api/v1';
 let lastRequest: Request | null = null;
 
 const server = setupServer(
-  http.post(`${BASE}/auth/send-otp/`, ({ request }) => {
+  http.post(`${BASE}/auth/request-otp`, ({ request }) => {
     lastRequest = request;
-    return HttpResponse.json({ message: 'ok' });
+    return HttpResponse.json({ expires_in: 300, retry_after: 60, is_new_user: false });
   }),
 
   http.post(`${BASE}/auth/verify-otp/`, async ({ request }) => {
@@ -60,16 +60,18 @@ describe('Auth API Contract', () => {
     expect(lastRequest!.headers.get('X-App-Type')).toBe('client');
   });
 
-  it('sendOtp отправляет phone в теле', async () => {
+  it('sendOtp отправляет phone в теле и возвращает expires_in', async () => {
     let body: any;
     server.use(
-      http.post(`${BASE}/auth/send-otp/`, async ({ request }) => {
+      http.post(`${BASE}/auth/request-otp`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ message: 'ok' });
+        return HttpResponse.json({ expires_in: 300, retry_after: 60, is_new_user: false });
       }),
     );
-    await sendOtp('+79001234567');
+    const res = await sendOtp('+79001234567');
     expect(body.phone).toBe('+79001234567');
+    expect(res.expires_in).toBe(300);
+    expect(typeof res.is_new_user).toBe('boolean');
   });
 
   it('verifyOtp отправляет phone, code, device_id в теле', async () => {

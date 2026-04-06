@@ -4,8 +4,8 @@ const BASE = 'https://dev.gobeauty.site/api/v1';
 
 export const handlers = [
   // ── Auth ────────────────────────────────────────────────────────────────────
-  http.post(`${BASE}/auth/send-otp/`, () =>
-    HttpResponse.json({ message: 'ok' }),
+  http.post(`${BASE}/auth/request-otp`, () =>
+    HttpResponse.json({ expires_in: 300, retry_after: 60, is_new_user: false }),
   ),
 
   http.post(`${BASE}/auth/verify-otp/`, async ({ request }) => {
@@ -36,7 +36,7 @@ export const handlers = [
     }),
   ),
 
-  http.patch(`${BASE}/clients/me/`, () => HttpResponse.json({ ok: true })),
+  http.patch(`${BASE}/auth/clients/me/`, () => HttpResponse.json({ ok: true })),
 
   // ── Specialists ──────────────────────────────────────────────────────────────
   http.get(`${BASE}/specialists/`, ({ request }) => {

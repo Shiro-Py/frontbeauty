@@ -34,17 +34,24 @@ export interface RegisterResponse {
   role: string;
 }
 
+export interface RequestOtpResponse {
+  expires_in: number;    // 300 секунд
+  retry_after: number;   // 60 секунд
+  is_new_user: boolean;  // true — регистрация, false — вход
+}
+
 /**
  * Отправить OTP.
  * DEV: пропускаем реальный запрос, код всегда 123456
  */
-export const sendOtp = async (phone: string): Promise<void> => {
+export const sendOtp = async (phone: string): Promise<RequestOtpResponse> => {
   if (IS_MOCK) {
     console.log(`[DEV MOCK] Код для ${phone}: ${MOCK_CODE}`);
-    return;
+    return { expires_in: 300, retry_after: 60, is_new_user: false };
   }
   const api = getApiClient();
-  await api.post('/auth/send-otp/', { phone });
+  const { data } = await api.post<RequestOtpResponse>('/auth/request-otp', { phone });
+  return data;
 };
 
 /**

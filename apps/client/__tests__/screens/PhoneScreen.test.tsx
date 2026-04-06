@@ -7,7 +7,7 @@ jest.mock('expo-router', () => ({
 }));
 
 jest.mock('@beautygo/shared', () => ({
-  sendOtp: jest.fn().mockResolvedValue(undefined),
+  sendOtp: jest.fn().mockResolvedValue({ expires_in: 300, retry_after: 60, is_new_user: false }),
 }));
 
 import PhoneScreen from '../../app/auth/phone';
@@ -20,7 +20,7 @@ const mockSendOtp = sendOtp as jest.Mock;
 describe('PhoneScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockSendOtp.mockResolvedValue(undefined);
+    mockSendOtp.mockResolvedValue({ expires_in: 300, retry_after: 60, is_new_user: false });
   });
 
   it('рендерится с заголовком и полем ввода', () => {
