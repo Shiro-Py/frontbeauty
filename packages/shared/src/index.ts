@@ -2,7 +2,7 @@
 export { initializeApiClient, getApiClient, setUnauthorizedHandler, setDeviceMismatchHandler, BASE_URL } from './api/client';
 export type { AppType } from './api/client';
 export { sendOtp, verifyOtp, completeRegistration, logout, getMe, updateClientProfile, createMasterProfile, createService, updateMasterProfile, getMasterMe, deleteAccount } from './api/auth';
-export type { VerifyOtpResponse, RegisterResponse, UserProfile, ClientProfileUpdate, MasterProfileCreate, ServiceData, MasterProfileUpdate, MasterMyProfile } from './api/auth';
+export type { RequestOtpResponse, VerifyOtpResponse, RegisterResponse, UserProfile, ClientProfileUpdate, MasterProfileCreate, ServiceData, MasterProfileUpdate, MasterMyProfile } from './api/auth';
 
 // Social Auth API
 export { postVKAuth, postGoogleAuth, postAppleAuth, postYandexAuth } from './api/socialAuth';
@@ -32,7 +32,7 @@ export type { ReviewSubmit } from './api/reviews';
 
 // Bookings
 export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments } from './api/bookings';
-export type { TimeSlot, BookingCreate, Booking, BookingStatus, AppointmentsPage } from './api/bookings';
+export type { SlotsResponse, BookingCreate, Booking, BookingStatus, AppointmentsPage } from './api/bookings';
 
 // Components
 export { default as MasterPreviewCard } from './components/MasterPreviewCard';

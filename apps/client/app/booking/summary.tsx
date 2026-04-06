@@ -34,7 +34,6 @@ export default function BookingSummaryScreen() {
     service_name: string;
     service_price: string;
     service_duration: string;
-    slot_id: string;
     date: string;
     time: string;
   }>();
@@ -51,15 +50,13 @@ export default function BookingSummaryScreen() {
         {
           specialist_id: params.specialist_id,
           service_id: params.service_id,
-          slot_id: params.slot_id,
-          date: params.date,
+          start_datetime: `${params.date}T${params.time}:00`,
         },
         {
           specialist_name: params.specialist_name,
           service_name: params.service_name,
           service_price: price,
           service_duration: duration,
-          time: params.time,
         },
       );
       router.replace({

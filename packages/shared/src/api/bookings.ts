@@ -1,17 +1,16 @@
 import { getApiClient } from './client';
 import { IS_MOCK } from './mock';
 
-export interface TimeSlot {
-  id: string;
-  time: string;
-  is_available: boolean;
+export interface SlotsResponse {
+  specialist_id: string;
+  date: string;
+  slots: string[];   // ["10:00", "11:30"] — только доступные
 }
 
 export interface BookingCreate {
   specialist_id: string;
   service_id: string;
-  slot_id: string;
-  date: string;
+  start_datetime: string;  // ISO 8601: "2026-04-10T14:00:00"
 }
 
 export type BookingStatus = 'pending' | 'awaiting_payment' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
@@ -40,19 +39,14 @@ export interface AppointmentsPage {
 
 // ─── Mock data ────────────────────────────────────────────────────────────────
 
-const MOCK_TIMES = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-  '12:00', '13:00', '13:30', '14:00', '14:30', '15:00',
-  '15:30', '16:00', '17:00', '18:00',
+const MOCK_AVAILABLE_TIMES = [
+  '09:00', '10:00', '10:30', '11:00',
+  '12:00', '13:30', '14:00', '15:00',
+  '15:30', '17:00', '18:00',
 ];
-const BUSY_INDICES = new Set([1, 4, 7, 12]);
 
-function generateMockSlots(date: string): TimeSlot[] {
-  return MOCK_TIMES.map((time, i) => ({
-    id: `slot-${date}-${i}`,
-    time,
-    is_available: !BUSY_INDICES.has(i),
-  }));
+function generateMockSlots(date: string): string[] {
+  return [...MOCK_AVAILABLE_TIMES];
 }
 
 function daysFromNow(n: number): string {
@@ -133,20 +127,26 @@ const mockBookingsStore: Booking[] = [
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 
-export const getSlots = async (specialistId: string, date: string): Promise<TimeSlot[]> => {
+export const getSlots = async (specialistId: string, serviceId: string, date: string): Promise<string[]> => {
   if (IS_MOCK) {
     await new Promise(r => setTimeout(r, 300));
     return generateMockSlots(date);
   }
   const api = getApiClient();
-  const { data } = await api.get<TimeSlot[]>(`/specialists/${specialistId}/slots/?date=${date}`);
-  return data;
+  const { data } = await api.get<SlotsResponse>(
+    `/specialists/${specialistId}/slots/?date=${date}&service_id=${serviceId}`,
+  );
+  return data.slots;
 };
 
 export const createBooking = async (
   payload: BookingCreate,
-  meta: { specialist_name: string; service_name: string; service_price: number; service_duration: number; time: string },
+  meta: { specialist_name: string; service_name: string; service_price: number; service_duration: number },
 ): Promise<Booking> => {
+  // Извлекаем дату и время из start_datetime для мок-данных
+  const [datePart, timePart] = payload.start_datetime.split('T');
+  const time = timePart?.slice(0, 5) ?? '';
+
   if (IS_MOCK) {
     await new Promise(r => setTimeout(r, 700));
     const booking: Booking = {
@@ -156,8 +156,8 @@ export const createBooking = async (
       service_name: meta.service_name,
       service_price: meta.service_price,
       service_duration: meta.service_duration,
-      date: payload.date,
-      time: meta.time,
+      date: datePart,
+      time,
       status: 'confirmed',
       created_at: new Date().toISOString(),
     };
@@ -166,7 +166,7 @@ export const createBooking = async (
   }
   const api = getApiClient();
   const idempotencyKey = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const { data } = await api.post<Booking>('/bookings/', payload, {
+  const { data } = await api.post<Booking>('/appointments', payload, {
     headers: { 'X-Idempotency-Key': idempotencyKey },
   });
   return data;

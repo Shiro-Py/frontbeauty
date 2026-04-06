@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getSlots, TimeSlot } from '@beautygo/shared';
+import { getSlots } from '@beautygo/shared';
 
 const DAYS_RU = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
 const MONTHS_RU = ['янв', 'фев', 'мар', 'апр', 'май', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
@@ -45,22 +45,22 @@ export default function SlotPickerScreen() {
   }>();
 
   const [selectedDay, setSelectedDay] = useState(DAYS[0].iso);
-  const [slots, setSlots] = useState<TimeSlot[]>([]);
+  const [slots, setSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
 
   const loadSlots = useCallback(async (date: string) => {
     setLoading(true);
     setSelectedSlot(null);
     try {
-      const data = await getSlots(params.specialist_id, date);
+      const data = await getSlots(params.specialist_id, params.service_id, date);
       setSlots(data);
     } catch {
       setSlots([]);
     } finally {
       setLoading(false);
     }
-  }, [params.specialist_id]);
+  }, [params.specialist_id, params.service_id]);
 
   useEffect(() => { loadSlots(selectedDay); }, [selectedDay, loadSlots]);
 
@@ -75,9 +75,8 @@ export default function SlotPickerScreen() {
         service_name: params.service_name,
         service_price: params.service_price,
         service_duration: params.service_duration,
-        slot_id: selectedSlot.id,
         date: selectedDay,
-        time: selectedSlot.time,
+        time: selectedSlot,
       },
     } as any);
   };
@@ -140,29 +139,20 @@ export default function SlotPickerScreen() {
         ) : (
           <FlatList
             data={slots}
-            keyExtractor={item => item.id}
+            keyExtractor={time => time}
             numColumns={4}
             columnWrapperStyle={S.slotRow}
             contentContainerStyle={S.slotList}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item }) => {
-              const isSelected = selectedSlot?.id === item.id;
+            renderItem={({ item: time }) => {
+              const isSelected = selectedSlot === time;
               return (
                 <Pressable
-                  style={[
-                    S.slotBtn,
-                    !item.is_available && S.slotBtnBusy,
-                    isSelected && S.slotBtnSelected,
-                  ]}
-                  onPress={() => item.is_available && setSelectedSlot(item)}
-                  disabled={!item.is_available}
+                  style={[S.slotBtn, isSelected && S.slotBtnSelected]}
+                  onPress={() => setSelectedSlot(time)}
                 >
-                  <Text style={[
-                    S.slotTime,
-                    !item.is_available && S.slotTimeBusy,
-                    isSelected && S.slotTimeSelected,
-                  ]}>
-                    {item.time}
+                  <Text style={[S.slotTime, isSelected && S.slotTimeSelected]}>
+                    {time}
                   </Text>
                 </Pressable>
               );
@@ -179,7 +169,7 @@ export default function SlotPickerScreen() {
           disabled={!selectedSlot}
         >
           <Text style={[S.btnText, !selectedSlot && S.btnTextDisabled]}>
-            {selectedSlot ? `Продолжить · ${selectedSlot.time}` : 'Выберите время'}
+            {selectedSlot ? `Продолжить · ${selectedSlot}` : 'Выберите время'}
           </Text>
         </Pressable>
       </View>
