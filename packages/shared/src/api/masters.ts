@@ -226,13 +226,13 @@ export const getMasterReviews = async (specialistId: string): Promise<MasterRevi
 export const toggleFavorite = async (specialistId: string): Promise<void> => {
   if (IS_MOCK) { mockFavoritesStore.add(specialistId); return; }
   const api = getApiClient();
-  await api.post(`/specialists/${specialistId}/favorite/`);
+  await api.post(`/favorites/specialists/${specialistId}`);
 };
 
 export const removeFavorite = async (specialistId: string): Promise<void> => {
   if (IS_MOCK) { mockFavoritesStore.delete(specialistId); return; }
   const api = getApiClient();
-  await api.delete(`/specialists/${specialistId}/favorite/`);
+  await api.delete(`/favorites/specialists/${specialistId}`);
 };
 
 export const getFavorites = async (): Promise<MasterDetail[]> => {
@@ -246,8 +246,8 @@ export const getFavorites = async (): Promise<MasterDetail[]> => {
     return allMasters.filter(m => mockFavoritesStore.has(m.id));
   }
   const api = getApiClient();
-  const { data } = await api.get<MasterDetail[]>('/specialists/favorites/');
-  return data;
+  const { data } = await api.get<{ results: MasterDetail[] }>('/favorites/specialists');
+  return data.results;
 };
 
 export const isMasterFavorited = (specialistId: string): boolean =>

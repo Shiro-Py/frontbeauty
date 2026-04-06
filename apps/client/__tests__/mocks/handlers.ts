@@ -69,8 +69,8 @@ export const handlers = [
     });
   }),
 
-  http.post(`${BASE}/specialists/:id/favorite/`, () => HttpResponse.json({ ok: true })),
-  http.delete(`${BASE}/specialists/:id/favorite/`, () => new HttpResponse(null, { status: 204 })),
+  http.post(`${BASE}/favorites/specialists/:id`, () => HttpResponse.json({ added: true }, { status: 201 })),
+  http.delete(`${BASE}/favorites/specialists/:id`, () => new HttpResponse(null, { status: 204 })),
 
   // ── Reviews ──────────────────────────────────────────────────────────────────
   http.get(`${BASE}/specialists/:id/reviews/`, () =>
