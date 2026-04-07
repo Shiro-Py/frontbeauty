@@ -77,8 +77,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Минимальное время показа splash-экрана
       await new Promise<void>(r => setTimeout(r, 1500));
 
-      const access = await tokenStorage.getAccess();
-      if (!access) {
+      const [access, refresh] = await Promise.all([
+        tokenStorage.getAccess(),
+        tokenStorage.getRefresh(),
+      ]);
+      if (!access || !refresh) {
+        await tokenStorage.clear();
         dispatch({ type: 'SET_UNAUTHORIZED' });
         return;
       }
