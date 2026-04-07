@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        // Валидируем токен вызовом getMe — interceptor сам обновит его при 401
+        // Валидируем токен вызовом getMe — interceptor обновит его при 401
         const user = await getMe();
         dispatch({ type: 'SET_USER', payload: user });
         dispatch({ type: 'SET_AUTHORIZED' });
@@ -92,9 +92,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (axios.isAxiosError(error) && !error.response) {
           // Реальная сетевая ошибка (нет соединения) — считаем токен валидным
           dispatch({ type: 'SET_AUTHORIZED' });
+        } else {
+          // 401, 5xx, ошибки интерцептора (No refresh token, etc.) — разлогиниваем
+          await tokenStorage.clear();
+          dispatch({ type: 'SET_UNAUTHORIZED' });
         }
-        // 401 / ошибки интерцептора (No refresh token, etc.):
-        // interceptor уже вызвал handleUnauthorized / handleDeviceMismatch
       }
     })();
   }, [handleUnauthorized, handleDeviceMismatch]);
