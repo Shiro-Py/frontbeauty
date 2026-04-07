@@ -7,6 +7,7 @@ import React, {
 } from 'react';
 import { router } from 'expo-router';
 
+import axios from 'axios';
 import { logout as apiLogout, getMe } from '../api/auth';
 import type { UserProfile } from '../api/auth';
 import { setUnauthorizedHandler, setDeviceMismatchHandler } from '../api/client';
@@ -88,11 +89,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: 'SET_USER', payload: user });
         dispatch({ type: 'SET_AUTHORIZED' });
       } catch (error: any) {
-        if (!error.response || error.response.status !== 401) {
-          // Нет сети или сервер недоступен (5xx) — считаем токен валидным
+        if (axios.isAxiosError(error) && !error.response) {
+          // Реальная сетевая ошибка (нет соединения) — считаем токен валидным
           dispatch({ type: 'SET_AUTHORIZED' });
         }
-        // 401: interceptor уже вызвал handleUnauthorized / handleDeviceMismatch
+        // 401 / ошибки интерцептора (No refresh token, etc.):
+        // interceptor уже вызвал handleUnauthorized / handleDeviceMismatch
       }
     })();
   }, [handleUnauthorized, handleDeviceMismatch]);
