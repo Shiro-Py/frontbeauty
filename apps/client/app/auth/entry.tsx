@@ -23,10 +23,16 @@ function SocialBtn({
 
 // ─── Type A — Welcome for first-time anonymous visitors ────────────────────────
 
-function TypeAWelcome({ onLogin }: { onLogin: () => void }) {
+function TypeAWelcome({ onLogin, vk, google, apple, anyLoading, error }: {
+  onLogin: () => void;
+  vk: ReturnType<typeof useVKAuth>;
+  google: ReturnType<typeof useGoogleAuth>;
+  apple: ReturnType<typeof useAppleAuth>;
+  anyLoading: boolean;
+  error: string | undefined;
+}) {
   const handleContinue = async () => {
-    // Mark that user has seen the welcome and is browsing as guest
-    await onboardingStorage.set('otp_verified'); // reuse as "seen entry"
+    await onboardingStorage.set('otp_verified');
     router.replace('/(tabs)/masters' as any);
   };
 
@@ -51,6 +57,42 @@ function TypeAWelcome({ onLogin }: { onLogin: () => void }) {
         <Pressable style={S.btnFill} onPress={onLogin}>
           <Text style={S.btnFillText}>Войти / Зарегистрироваться</Text>
         </Pressable>
+
+        <Text style={S.or}>ИЛИ</Text>
+
+        <SocialBtn
+          label="Войти с Google"
+          disabled={!google.ready || anyLoading}
+          onPress={google.signInWithGoogle}
+          icon={
+            <Text style={S.googleIcon}>
+              <Text style={{ color: '#4285F4' }}>G</Text>
+              <Text style={{ color: '#EA4335' }}>o</Text>
+              <Text style={{ color: '#FBBC05' }}>o</Text>
+              <Text style={{ color: '#4285F4' }}>g</Text>
+              <Text style={{ color: '#34A853' }}>l</Text>
+              <Text style={{ color: '#EA4335' }}>e</Text>
+            </Text>
+          }
+        />
+
+        {Platform.OS === 'ios' && (
+          <SocialBtn
+            label="Войти с Apple"
+            disabled={!apple.available || anyLoading}
+            onPress={apple.signInWithApple}
+            icon={<Text style={S.appleIcon}></Text>}
+          />
+        )}
+
+        <SocialBtn
+          label="Войти с VKID"
+          disabled={!vk.ready || anyLoading}
+          onPress={vk.signInWithVK}
+          icon={<Text style={S.vkIcon}>VK</Text>}
+        />
+
+        {error && <Text style={S.error}>{error}</Text>}
 
         <Pressable style={S.btnOutline} onPress={handleContinue}>
           <Text style={S.btnOutlineText}>Посмотреть мастеров</Text>
@@ -101,7 +143,16 @@ export default function EntryScreen() {
   if (!checked) return null;
 
   if (showTypeA) {
-    return <TypeAWelcome onLogin={handleLogin} />;
+    return (
+      <TypeAWelcome
+        onLogin={handleLogin}
+        vk={vk}
+        google={google}
+        apple={apple}
+        anyLoading={anyLoading}
+        error={error ?? undefined}
+      />
+    );
   }
 
   return (
