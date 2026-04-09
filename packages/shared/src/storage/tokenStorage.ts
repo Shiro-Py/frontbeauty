@@ -5,6 +5,7 @@ const KEYS = {
   ACCESS_TOKEN: 'ACCESS_TOKEN',
   REFRESH_TOKEN: 'REFRESH_TOKEN',
   DEVICE_ID: 'DEVICE_ID',
+  ANONYMOUS_TOKEN: 'ANONYMOUS_TOKEN',
 } as const;
 
 function generateUUID(): string {
@@ -55,8 +56,18 @@ export const tokenStorage = {
     }
     return id;
   },
+  async getAnonymous(): Promise<string | null> {
+    return storage.get(KEYS.ANONYMOUS_TOKEN);
+  },
+  async saveAnonymous(token: string): Promise<void> {
+    await storage.set(KEYS.ANONYMOUS_TOKEN, token);
+  },
+  async clearAnonymous(): Promise<void> {
+    await storage.delete(KEYS.ANONYMOUS_TOKEN);
+  },
   async clear(): Promise<void> {
-    // Только токены сессии. DEVICE_ID не удаляем — он идентифицирует устройство.
+    // Только токены сессии. DEVICE_ID и ANONYMOUS_TOKEN не удаляем здесь —
+    // анонимный токен очищается отдельно при merge (signIn).
     await storage.delete(KEYS.ACCESS_TOKEN);
     await storage.delete(KEYS.REFRESH_TOKEN);
   },

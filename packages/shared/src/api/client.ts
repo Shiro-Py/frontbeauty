@@ -34,11 +34,14 @@ export function initializeApiClient(appType: AppType): void {
   });
 
   // Request interceptor — добавляет access token и X-Device-Id
+  // Приоритет: полноценный JWT > anonymous JWT
   _apiClient.interceptors.request.use(async (config) => {
-    const [token, deviceId] = await Promise.all([
+    const [accessToken, anonymousToken, deviceId] = await Promise.all([
       tokenStorage.getAccess(),
+      tokenStorage.getAnonymous(),
       tokenStorage.getDeviceId(),
     ]);
+    const token = accessToken || anonymousToken;
     if (token) config.headers.Authorization = `Bearer ${token}`;
     config.headers['X-Device-Id'] = deviceId;
     return config;

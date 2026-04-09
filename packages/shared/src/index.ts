@@ -4,6 +4,9 @@ export type { AppType } from './api/client';
 export { sendOtp, verifyOtp, completeRegistration, logout, getMe, updateClientProfile, createMasterProfile, createService, updateMasterProfile, getMasterMe, deleteAccount } from './api/auth';
 export type { RequestOtpResponse, VerifyOtpResponse, RegisterResponse, UserProfile, ClientProfileUpdate, MasterProfileCreate, ServiceData, MasterProfileUpdate, MasterMyProfile } from './api/auth';
 
+// Anonymous Auth
+export { initAnonymousSession } from './api/anonymousAuth';
+
 // Social Auth API
 export { postVKAuth, postGoogleAuth, postAppleAuth, postYandexAuth } from './api/socialAuth';
 export type { SocialAuthResult } from './api/socialAuth';

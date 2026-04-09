@@ -117,6 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(
     async (access: string, refresh: string, isNewUser: boolean, user?: UserProfile | null) => {
       await tokenStorage.save(access, refresh);
+      // Merge сессии: анонимный токен больше не нужен
+      await tokenStorage.clearAnonymous();
       if (user) dispatch({ type: 'SET_USER', payload: user });
       dispatch({ type: 'SET_NEW_USER', payload: isNewUser });
       dispatch({ type: 'SET_AUTHORIZED' });

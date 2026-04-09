@@ -3,7 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 
-import { initializeApiClient, AuthProvider, useAuth } from '@beautygo/shared';
+import { initializeApiClient, AuthProvider, useAuth, initAnonymousSession } from '@beautygo/shared';
 
 // Инициализируем API клиент с X-App-Type: client
 initializeApiClient('client');
@@ -13,6 +13,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
+    initAnonymousSession().catch(() => {});
   }, []);
 
   return (
