@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Image, Linking, Platform } from 'react-native';
 import { router } from 'expo-router';
-import { useVKAuth, useGoogleAuth, useAppleAuth } from '@beautygo/shared';
+import { useVKAuth, useGoogleAuth, useAppleAuth, tokenStorage } from '@beautygo/shared';
+import { onboardingStorage } from '../../utils/onboardingStorage';
 
 // ─── Social button ─────────────────────────────────────────────────────────────
 
@@ -19,6 +21,53 @@ function SocialBtn({
   );
 }
 
+// ─── Type A — Welcome for first-time anonymous visitors ────────────────────────
+
+function TypeAWelcome({ onLogin }: { onLogin: () => void }) {
+  const handleContinue = async () => {
+    // Mark that user has seen the welcome and is browsing as guest
+    await onboardingStorage.set('otp_verified'); // reuse as "seen entry"
+    router.replace('/(tabs)/masters' as any);
+  };
+
+  return (
+    <View style={S.container}>
+      <View style={S.logoWrap}>
+        <Image
+          source={require('../../assets/images/logo.png')}
+          style={S.logo}
+          resizeMode="contain"
+        />
+      </View>
+
+      <View style={S.titleWrap}>
+        <Text style={S.title}>Добро пожаловать!</Text>
+        <Text style={S.subtitle}>
+          Найдите мастера красоты рядом с вами.{'\n'}Запись за несколько секунд.
+        </Text>
+      </View>
+
+      <View style={S.footer}>
+        <Pressable style={S.btnFill} onPress={onLogin}>
+          <Text style={S.btnFillText}>Войти / Зарегистрироваться</Text>
+        </Pressable>
+
+        <Pressable style={S.btnOutline} onPress={handleContinue}>
+          <Text style={S.btnOutlineText}>Посмотреть мастеров</Text>
+        </Pressable>
+
+        <Text style={S.terms}>
+          Использование приложения означает ваше{' '}
+          <Text style={S.termsLink} onPress={() => Linking.openURL('https://gobeauty.site/terms')}>
+            Согласие с условиями
+          </Text>
+          , регулирующими порядок предоставления услуг и обработку персональной информации.
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 // ─── Main ──────────────────────────────────────────────────────────────────────
 
 export default function EntryScreen() {
@@ -28,6 +77,32 @@ export default function EntryScreen() {
   const anyLoading = vk.loading || google.loading || apple.loading;
 
   const error = vk.error || google.error || apple.error;
+
+  const [showTypeA, setShowTypeA] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [status, anon] = await Promise.all([
+        onboardingStorage.get(),
+        tokenStorage.getAnonymous(),
+      ]);
+      if (status === 'not_started' && !!anon) {
+        setShowTypeA(true);
+      }
+      setChecked(true);
+    })();
+  }, []);
+
+  const handleLogin = () => {
+    router.push({ pathname: '/auth/phone', params: { mode: 'login' } });
+  };
+
+  if (!checked) return null;
+
+  if (showTypeA) {
+    return <TypeAWelcome onLogin={handleLogin} />;
+  }
 
   return (
     <View style={S.container}>

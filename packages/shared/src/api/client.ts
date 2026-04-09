@@ -9,6 +9,7 @@ let _apiClient: ReturnType<typeof axios.create> | null = null;
 let _appType: AppType = 'client';
 let _onUnauthorized: (() => void) | null = null;
 let _onDeviceMismatch: (() => void) | null = null;
+let _onGateRequired: ((trigger: 'booking' | 'review' | 'favorite') => void) | null = null;
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -84,7 +85,16 @@ export function initializeApiClient(appType: AppType): void {
 
         try {
           const refreshToken = await tokenStorage.getRefresh();
-          if (!refreshToken) throw new Error('No refresh token');
+          if (!refreshToken) {
+            const anonToken = await tokenStorage.getAnonymous();
+            const isAuthEndpoint = originalRequest.url?.includes('/auth/');
+            if (anonToken && _onGateRequired && !isAuthEndpoint) {
+              _onGateRequired(getTriggerFromUrl(originalRequest.url ?? ''));
+            } else {
+              _onUnauthorized?.();
+            }
+            return Promise.reject(new Error('No refresh token'));
+          }
 
           const { data } = await axios.post(
             `${BASE_URL}/auth/token/refresh/`,
@@ -128,4 +138,15 @@ export function setUnauthorizedHandler(handler: () => void) {
 
 export function setDeviceMismatchHandler(handler: () => void) {
   _onDeviceMismatch = handler;
+}
+
+export function setGateHandler(handler: ((trigger: 'booking' | 'review' | 'favorite') => void) | null) {
+  _onGateRequired = handler;
+}
+
+function getTriggerFromUrl(url: string): 'booking' | 'review' | 'favorite' {
+  if (url?.includes('/appointments') || url?.includes('/slots') || url?.includes('/bookings')) return 'booking';
+  if (url?.includes('/reviews')) return 'review';
+  if (url?.includes('/favorites')) return 'favorite';
+  return 'booking';
 }

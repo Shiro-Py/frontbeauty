@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 
-import { initializeApiClient, AuthProvider, useAuth, initAnonymousSession } from '@beautygo/shared';
+import { initializeApiClient, AuthProvider, useAuth, initAnonymousSession, setGateHandler } from '@beautygo/shared';
+import GateBottomSheet, { GateTrigger } from '../components/GateBottomSheet';
 
 // Инициализируем API клиент с X-App-Type: client
 initializeApiClient('client');
@@ -26,6 +27,19 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const { status } = useAuth();
 
+  const [gateVisible, setGateVisible] = useState(false);
+  const [gateTrigger, setGateTrigger] = useState<GateTrigger>('booking');
+
+  const handleGateRequired = useCallback((trigger: GateTrigger) => {
+    setGateTrigger(trigger);
+    setGateVisible(true);
+  }, []);
+
+  useEffect(() => {
+    setGateHandler(handleGateRequired);
+    return () => setGateHandler(null);
+  }, [handleGateRequired]);
+
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
@@ -46,6 +60,11 @@ function RootLayoutNav() {
           <ActivityIndicator size="large" color="#7B61FF" />
         </View>
       )}
+      <GateBottomSheet
+        visible={gateVisible}
+        trigger={gateTrigger}
+        onClose={() => setGateVisible(false)}
+      />
     </>
   );
 }

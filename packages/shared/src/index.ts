@@ -1,5 +1,5 @@
 // API
-export { initializeApiClient, getApiClient, setUnauthorizedHandler, setDeviceMismatchHandler, BASE_URL } from './api/client';
+export { initializeApiClient, getApiClient, setUnauthorizedHandler, setDeviceMismatchHandler, setGateHandler, BASE_URL } from './api/client';
 export type { AppType } from './api/client';
 export { sendOtp, verifyOtp, completeRegistration, logout, getMe, updateClientProfile, createMasterProfile, createService, updateMasterProfile, getMasterMe, deleteAccount } from './api/auth';
 export type { RequestOtpResponse, VerifyOtpResponse, RegisterResponse, UserProfile, ClientProfileUpdate, MasterProfileCreate, ServiceData, MasterProfileUpdate, MasterMyProfile } from './api/auth';

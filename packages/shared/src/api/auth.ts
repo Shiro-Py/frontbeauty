@@ -57,11 +57,13 @@ export const sendOtp = async (phone: string): Promise<RequestOtpResponse> => {
 /**
  * Проверить OTP → получить JWT.
  * DEV: код 123456 всегда проходит
+ * anonymousToken — если передан, бэкенд мёрджит анонимную сессию с аккаунтом
  */
 export const verifyOtp = async (
   phone: string,
   code: string,
   deviceId: string,
+  anonymousToken?: string,
 ): Promise<VerifyOtpResponse> => {
   if (IS_MOCK) {
     if (code !== MOCK_CODE) {
@@ -70,11 +72,9 @@ export const verifyOtp = async (
     return mockVerifyResponse(phone);
   }
   const api = getApiClient();
-  const { data } = await api.post<VerifyOtpResponse>('/auth/verify-otp/', {
-    phone,
-    code,
-    device_id: deviceId,
-  });
+  const body: Record<string, string> = { phone, code, device_id: deviceId };
+  if (anonymousToken) body.anonymous_token = anonymousToken;
+  const { data } = await api.post<VerifyOtpResponse>('/auth/verify-otp/', body);
   return data;
 };
 
