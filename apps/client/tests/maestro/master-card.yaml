@@ -1,0 +1,12 @@
+appId: com.beautygo.client
+---
+- launchApp
+- waitForAnimationToEnd
+- tapOn:
+    id: "tab-masters"
+- tapOn:
+    id: "master-card-1"
+- assertVisible:
+    id: "master-profile-screen"
+- assertVisible:
+    id: "booking-btn"

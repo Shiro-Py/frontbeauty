@@ -1,0 +1,12 @@
+appId: com.beautygo.client
+---
+- launchApp
+- waitForAnimationToEnd
+- tapOn:
+    id: "tab-favorites"
+- assertVisible:
+    id: "favorites-list"
+- assertVisible: "Мария Иванова"
+- tapOn:
+    id: "favorite-toggle-btn"
+- assertNotVisible: "Мария Иванова"

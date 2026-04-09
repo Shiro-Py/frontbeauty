@@ -53,6 +53,7 @@ export default function FavoritesScreen() {
 
   return (
     <FlatList
+      testID="favorites-list"
       style={styles.container}
       data={masters}
       keyExtractor={(item) => item.id}
@@ -68,7 +69,7 @@ export default function FavoritesScreen() {
       ListEmptyComponent={
         <View style={styles.empty}>
           <Ionicons name="heart-outline" size={64} color="#C8C2E8" />
-          <Text style={styles.emptyTitle}>Нет избранных мастеров</Text>
+          <Text testID="favorites-empty" style={styles.emptyTitle}>Нет избранных мастеров</Text>
           <Text style={styles.emptySubtitle}>
             Нажмите ❤️ на карточке мастера, чтобы добавить его в избранное
           </Text>

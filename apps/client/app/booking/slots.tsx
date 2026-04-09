@@ -85,7 +85,7 @@ export default function SlotPickerScreen() {
   const duration = Number(params.service_duration);
 
   return (
-    <View style={S.root}>
+    <View testID="slots-screen" style={S.root}>
       {/* Header */}
       <View style={S.header}>
         <Pressable style={S.backBtn} onPress={() => router.back()}>
@@ -144,10 +144,11 @@ export default function SlotPickerScreen() {
             columnWrapperStyle={S.slotRow}
             contentContainerStyle={S.slotList}
             showsVerticalScrollIndicator={false}
-            renderItem={({ item: time }) => {
+            renderItem={({ item: time, index }) => {
               const isSelected = selectedSlot === time;
               return (
                 <Pressable
+                  testID={`slot-item-${index}`}
                   style={[S.slotBtn, isSelected && S.slotBtnSelected]}
                   onPress={() => setSelectedSlot(time)}
                 >
@@ -164,6 +165,7 @@ export default function SlotPickerScreen() {
       {/* Continue button */}
       <View style={S.bottomBar}>
         <Pressable
+          testID="slots-next-btn"
           style={[S.btn, !selectedSlot && S.btnDisabled]}
           onPress={handleContinue}
           disabled={!selectedSlot}

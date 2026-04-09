@@ -1,0 +1,17 @@
+name: Smoke Tests
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  jest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: yarn
+      - run: yarn install --frozen-lockfile
+      - run: yarn workspace @beautygo/client jest --passWithNoTests --ci

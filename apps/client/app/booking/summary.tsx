@@ -86,7 +86,7 @@ export default function BookingSummaryScreen() {
   };
 
   return (
-    <View style={S.root}>
+    <View testID="summary-screen" style={S.root}>
       {/* Header */}
       <View style={S.header}>
         <Pressable style={S.backBtn} onPress={() => router.back()}>
@@ -151,7 +151,7 @@ export default function BookingSummaryScreen() {
 
       {/* Bottom button */}
       <View style={S.bottomBar}>
-        <Pressable style={[S.btn, loading && S.btnLoading]} onPress={handleBook} disabled={loading}>
+        <Pressable testID="confirm-btn" style={[S.btn, loading && S.btnLoading]} onPress={handleBook} disabled={loading}>
           {loading
             ? <ActivityIndicator color="#fff" />
             : <Text style={S.btnText}>Записаться · {price.toLocaleString('ru-RU')} ₽</Text>

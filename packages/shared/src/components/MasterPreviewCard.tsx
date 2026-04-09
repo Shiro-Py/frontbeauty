@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
+  id?: string;
   name: string;
   service: string;
   rating: number;
@@ -24,7 +25,7 @@ function formatDuration(minutes: number): string {
 }
 
 export default function MasterPreviewCard({
-  name, service, rating, onPress, avatarPlaceholder,
+  id, name, service, rating, onPress, avatarPlaceholder,
   isFavorite = false, onFavorite,
   price, duration_minutes, distance_km,
 }: Props) {
@@ -41,7 +42,7 @@ export default function MasterPreviewCard({
   const hasMeta = price != null || duration_minutes != null || distance_km != null;
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable testID={id ? `master-card-${id}` : 'master-card'} style={styles.card} onPress={onPress}>
       <View style={styles.avatar}>
         <Text style={styles.avatarText}>{avatarPlaceholder ?? name[0]}</Text>
       </View>
@@ -51,7 +52,7 @@ export default function MasterPreviewCard({
           <Text style={styles.name} numberOfLines={1}>{name}</Text>
           <View style={styles.ratingRow}>
             <Ionicons name="star" size={12} color="#FFBC00" />
-            <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+            <Text testID="master-rating" style={styles.ratingText}>{rating.toFixed(1)}</Text>
           </View>
         </View>
 
@@ -81,7 +82,7 @@ export default function MasterPreviewCard({
 
       {onFavorite !== undefined && (
         <Animated.View style={{ transform: [{ scale }] }}>
-          <Pressable onPress={handleFavorite} hitSlop={10} style={styles.heartBtn}>
+          <Pressable testID="favorite-toggle-btn" onPress={handleFavorite} hitSlop={10} style={styles.heartBtn}>
             <Ionicons
               name={isFavorite ? 'heart' : 'heart-outline'}
               size={22}

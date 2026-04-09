@@ -24,7 +24,7 @@ export default function BookingConfirmationScreen() {
   }>();
 
   return (
-    <View style={S.root}>
+    <View testID="confirmation-screen" style={S.root}>
       <View style={S.body}>
         {/* Success icon */}
         <View style={S.checkCircle}>

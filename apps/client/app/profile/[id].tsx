@@ -112,7 +112,7 @@ export default function MasterProfileScreen() {
   const topReviews = reviews.slice(0, 3);
 
   return (
-    <View style={styles.root}>
+    <View testID="master-profile-screen" style={styles.root}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -311,6 +311,7 @@ export default function MasterProfileScreen() {
           <Text style={styles.reviewBtnText}>Отзыв</Text>
         </Pressable>
         <Pressable
+          testID="booking-btn"
           style={styles.bookingBtn}
           onPress={() => {
             const svc = services[0];

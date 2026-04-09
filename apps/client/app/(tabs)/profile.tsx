@@ -236,7 +236,7 @@ export default function ProfileScreen() {
 
       {/* Кнопки действий */}
       {!editing ? (
-        <Pressable style={styles.editButton} onPress={startEdit}>
+        <Pressable testID="edit-profile-btn" style={styles.editButton} onPress={startEdit}>
           <Ionicons name="create-outline" size={18} color="#7B61FF" />
           <Text style={styles.editButtonText}>Редактировать</Text>
         </Pressable>

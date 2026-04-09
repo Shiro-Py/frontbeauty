@@ -1,0 +1,24 @@
+appId: com.beautygo.client
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- assertVisible:
+    id: "entry-screen"
+- tapOn:
+    id: "phone-auth-btn"
+- assertVisible:
+    id: "phone-screen"
+- inputText:
+    id: "phone-input"
+    text: "9001234567"
+- tapOn:
+    id: "send-otp-btn"
+- assertVisible:
+    id: "otp-screen"
+- inputText:
+    id: "otp-input"
+    text: "123456"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "tab-masters"
