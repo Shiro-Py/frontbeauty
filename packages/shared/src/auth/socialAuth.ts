@@ -68,6 +68,7 @@ export function useVKAuth() {
       redirectUri,
       responseType: AuthSession.ResponseType.Token,
       scopes: ['email'],
+      usePKCE: false,
     },
     VK_DISCOVERY,
   );
