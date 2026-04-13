@@ -33,6 +33,10 @@ export type { Service, ServiceCreateData, ServiceUpdateData } from './api/servic
 export { submitReview } from './api/reviews';
 export type { ReviewSubmit } from './api/reviews';
 
+// Schedule
+export { getSchedule, patchScheduleDay, validateWorkingDay, timeToMinutes } from './api/schedule';
+export type { WorkingDay, Schedule, PatchDayPayload, DayOfWeek } from './api/schedule';
+
 // Bookings
 export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments } from './api/bookings';
 export type { SlotsResponse, BookingCreate, Booking, BookingStatus, AppointmentsPage, AppointmentWithDetails } from './api/bookings';
