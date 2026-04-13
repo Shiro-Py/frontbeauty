@@ -3,11 +3,18 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useState } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 
-import { initializeApiClient, AuthProvider, useAuth, initAnonymousSession, setGateHandler } from '@beautygo/shared';
+import {
+  initializeApiClient, AuthProvider, useAuth, initAnonymousSession, setGateHandler,
+  configureForegroundHandler, addNotificationTapListener,
+  registerDevicePushToken, addPushTokenRefreshListener,
+} from '@beautygo/shared';
 import GateBottomSheet, { GateTrigger } from '../components/GateBottomSheet';
 
 // Инициализируем API клиент с X-App-Type: client
 initializeApiClient('client');
+
+// Показывать системный баннер когда приложение открыто
+configureForegroundHandler();
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -39,6 +46,20 @@ function RootLayoutNav() {
     setGateHandler(handleGateRequired);
     return () => setGateHandler(null);
   }, [handleGateRequired]);
+
+  // Tap handler + token refresh listener
+  useEffect(() => {
+    const cleanTap = addNotificationTapListener();
+    const cleanToken = addPushTokenRefreshListener('client');
+    return () => { cleanTap(); cleanToken(); };
+  }, []);
+
+  // Регистрируем токен после аутентификации
+  useEffect(() => {
+    if (status === 'authenticated') {
+      registerDevicePushToken('client').catch(() => {});
+    }
+  }, [status]);
 
   return (
     <>

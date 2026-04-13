@@ -15,10 +15,14 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.beautygo.pro"
+      "bundleIdentifier": "com.beautygo.pro",
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"]
+      }
     },
     "android": {
       "package": "com.beautygo.pro",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#4A3DB0"
@@ -32,7 +36,16 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/icon.png",
+          "color": "#4A3DB0",
+          "defaultChannel": "default",
+          "sounds": []
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

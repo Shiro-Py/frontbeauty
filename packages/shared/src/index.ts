@@ -39,6 +39,10 @@ export type { WorkingDay, Schedule, PatchDayPayload, DayOfWeek, TimeOff, TimeOff
 
 // Bookings
 export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments, getProAppointments, getProAppointmentById, completeAppointment, cancelAppointmentWithReason } from './api/bookings';
+
+// Notifications
+export { requestNotificationPermissions, getNotificationsDeclinedAt, registerDevicePushToken, addPushTokenRefreshListener, configureForegroundHandler, addNotificationTapListener, getDeepLinkFromNotification } from './notifications';
+export type { PermissionResult, NotificationAppType, NotificationType, NotificationPayload } from './notifications';
 export type { SlotsResponse, BookingCreate, Booking, BookingStatus, AppointmentsPage, AppointmentWithDetails, ProAppointment, ProAppointmentsPage, ProAppointmentFilter } from './api/bookings';
 
 // Components

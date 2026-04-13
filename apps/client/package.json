@@ -24,6 +24,7 @@
     "expo-auth-session": "~7.0.10",
     "expo-image-picker": "~17.0.10",
     "expo-location": "~19.0.8",
+    "expo-notifications": "~0.30.0",
     "expo-web-browser": "~15.0.10",
     "expo-secure-store": "~15.0.8",
     "expo-splash-screen": "~31.0.13",

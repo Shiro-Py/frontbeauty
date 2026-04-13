@@ -7,6 +7,8 @@
     "axios": "*",
     "expo-apple-authentication": "*",
     "expo-auth-session": "*",
+    "expo-notifications": "*",
+    "expo-router": "*",
     "expo-secure-store": "*",
     "expo-web-browser": "*",
     "react": "*",

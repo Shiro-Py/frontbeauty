@@ -3,7 +3,8 @@ import {
   ActivityIndicator, FlatList, Pressable, RefreshControl,
   SectionList, StyleSheet, Text, View,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { getProAppointments, ProAppointment, BookingStatus } from '@beautygo/shared';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -287,6 +288,11 @@ function HistoryTab() {
 
 export default function BookingsScreen() {
   const [activeTab, setActiveTab] = useState<Tab>('today');
+
+  // Сбрасываем badge при открытии вкладки
+  useFocusEffect(useCallback(() => {
+    Notifications.setBadgeCountAsync(0).catch(() => {});
+  }, []));
 
   return (
     <View style={S.root}>

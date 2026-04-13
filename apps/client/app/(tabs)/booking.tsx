@@ -4,6 +4,7 @@ import {
   ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
 import {
   getPastAppointments, getUpcomingAppointments,
@@ -165,6 +166,11 @@ const PAGE_SIZE = 20;
 
 export default function MyBookingsScreen() {
   const [tab, setTab] = useState<Tab>('past');
+
+  // Сбрасываем badge при открытии вкладки
+  useFocusEffect(useCallback(() => {
+    Notifications.setBadgeCountAsync(0).catch(() => {});
+  }, []));
 
   // ── Past tab state ────────────────────────────────────────────
   const [past, setPast] = useState<Booking[]>([]);

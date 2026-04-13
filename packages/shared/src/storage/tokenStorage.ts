@@ -6,6 +6,8 @@ const KEYS = {
   REFRESH_TOKEN: 'REFRESH_TOKEN',
   DEVICE_ID: 'DEVICE_ID',
   ANONYMOUS_TOKEN: 'ANONYMOUS_TOKEN',
+  PUSH_TOKEN: 'PUSH_TOKEN',
+  NOTIFICATIONS_DECLINED_AT: 'NOTIFICATIONS_DECLINED_AT',
 } as const;
 
 function generateUUID(): string {
@@ -64,6 +66,21 @@ export const tokenStorage = {
   },
   async clearAnonymous(): Promise<void> {
     await storage.delete(KEYS.ANONYMOUS_TOKEN);
+  },
+  async getPushToken(): Promise<string | null> {
+    return storage.get(KEYS.PUSH_TOKEN);
+  },
+  async savePushToken(token: string): Promise<void> {
+    await storage.set(KEYS.PUSH_TOKEN, token);
+  },
+  async clearPushToken(): Promise<void> {
+    await storage.delete(KEYS.PUSH_TOKEN);
+  },
+  async getNotificationsDeclinedAt(): Promise<string | null> {
+    return storage.get(KEYS.NOTIFICATIONS_DECLINED_AT);
+  },
+  async setNotificationsDeclinedAt(iso: string): Promise<void> {
+    await storage.set(KEYS.NOTIFICATIONS_DECLINED_AT, iso);
   },
   async clear(): Promise<void> {
     // Только токены сессии. DEVICE_ID и ANONYMOUS_TOKEN не удаляем здесь —
