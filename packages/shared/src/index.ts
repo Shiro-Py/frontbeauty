@@ -38,8 +38,8 @@ export { getSchedule, patchScheduleDay, validateWorkingDay, timeToMinutes, getTi
 export type { WorkingDay, Schedule, PatchDayPayload, DayOfWeek, TimeOff, TimeOffCreate } from './api/schedule';
 
 // Bookings
-export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments } from './api/bookings';
-export type { SlotsResponse, BookingCreate, Booking, BookingStatus, AppointmentsPage, AppointmentWithDetails } from './api/bookings';
+export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments, getProAppointments, getProAppointmentById, completeAppointment, cancelAppointmentWithReason } from './api/bookings';
+export type { SlotsResponse, BookingCreate, Booking, BookingStatus, AppointmentsPage, AppointmentWithDetails, ProAppointment, ProAppointmentsPage, ProAppointmentFilter } from './api/bookings';
 
 // Components
 export { default as MasterPreviewCard } from './components/MasterPreviewCard';
