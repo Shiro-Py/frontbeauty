@@ -1,4 +1,4 @@
-import { validateWorkingDay, timeToMinutes } from '@beautygo/shared';
+import { validateWorkingDay, timeToMinutes, validateTimeOff } from '@beautygo/shared';
 import type { WorkingDay } from '@beautygo/shared';
 
 // ─── timeToMinutes ────────────────────────────────────────────────────────────
@@ -93,5 +93,63 @@ describe('validateWorkingDay', () => {
   it('passes Monday 10:00–20:00 with break 14:00–15:00', () => {
     const day = makeDay({ start_time: '10:00', end_time: '20:00', break_start: '14:00', break_end: '15:00' });
     expect(validateWorkingDay(day)).toBeNull();
+  });
+});
+
+// ─── validateTimeOff ──────────────────────────────────────────────────────────
+
+describe('validateTimeOff', () => {
+  function future(daysFromNow: number, h = 10, m = 0): Date {
+    const d = new Date();
+    d.setDate(d.getDate() + daysFromNow);
+    d.setHours(h, m, 0, 0);
+    return d;
+  }
+  function past(daysAgo: number): Date {
+    const d = new Date();
+    d.setDate(d.getDate() - daysAgo);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  it('fails when startAt is in the past', () => {
+    expect(validateTimeOff(past(1), future(1))).toMatch(/прошлом/i);
+  });
+  it('fails when startAt is today but earlier in the day (still past midnight start)', () => {
+    const yesterday = past(0); // midnight today — should pass
+    const startYesterday = past(1);
+    expect(validateTimeOff(startYesterday, future(1))).toMatch(/прошлом/i);
+  });
+  it('passes when startAt is exactly today midnight', () => {
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    expect(validateTimeOff(todayMidnight, future(1))).toBeNull();
+  });
+
+  it('fails when endAt equals startAt', () => {
+    const d = future(1);
+    expect(validateTimeOff(d, d)).toMatch(/позже/i);
+  });
+  it('fails when endAt is before startAt', () => {
+    expect(validateTimeOff(future(3), future(1))).toMatch(/позже/i);
+  });
+
+  it('fails when duration exceeds 90 days', () => {
+    expect(validateTimeOff(future(1), future(92))).toMatch(/90 дней/i);
+  });
+  it('passes when duration is exactly 90 days', () => {
+    expect(validateTimeOff(future(1), future(91))).toBeNull();
+  });
+
+  it('passes a normal all-day single-day block', () => {
+    const start = new Date(); start.setHours(0, 0, 0, 0);
+    const end   = new Date(); end.setHours(23, 59, 0, 0);
+    expect(validateTimeOff(start, end)).toBeNull();
+  });
+  it('passes a normal vacation block (7 days)', () => {
+    expect(validateTimeOff(future(1, 0), future(8, 23, 59))).toBeNull();
+  });
+  it('passes a 1-hour block today', () => {
+    expect(validateTimeOff(future(0, 15), future(0, 16))).toBeNull();
   });
 });

@@ -34,8 +34,8 @@ export { submitReview } from './api/reviews';
 export type { ReviewSubmit } from './api/reviews';
 
 // Schedule
-export { getSchedule, patchScheduleDay, validateWorkingDay, timeToMinutes } from './api/schedule';
-export type { WorkingDay, Schedule, PatchDayPayload, DayOfWeek } from './api/schedule';
+export { getSchedule, patchScheduleDay, validateWorkingDay, timeToMinutes, getTimeOffs, createTimeOff, deleteTimeOff, validateTimeOff } from './api/schedule';
+export type { WorkingDay, Schedule, PatchDayPayload, DayOfWeek, TimeOff, TimeOffCreate } from './api/schedule';
 
 // Bookings
 export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments } from './api/bookings';

@@ -384,7 +384,7 @@ export default function ScheduleScreen() {
         ListFooterComponent={
           <Pressable
             style={S.timeOffBtn}
-            onPress={() => router.push('/timeoff' as any)}
+            onPress={() => router.push('/schedule/time-off' as any)}
           >
             <Text style={S.timeOffText}>Управление выходными</Text>
             <Ionicons name="chevron-forward" size={16} color="#4A3DB0" />

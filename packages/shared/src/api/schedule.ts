@@ -97,3 +97,89 @@ export const patchScheduleDay = async (payload: PatchDayPayload): Promise<void> 
   if (IS_MOCK) return;
   await getApiClient().patch('/specialists/me/schedule/', [payload]);
 };
+
+// ─── TimeOff types ────────────────────────────────────────────────────────────
+
+export interface TimeOff {
+  id: string;
+  start_at: string; // ISO 8601 UTC
+  end_at: string;   // ISO 8601 UTC
+  reason: string | null;
+}
+
+export interface TimeOffCreate {
+  start_at: string;
+  end_at: string;
+  reason?: string | null;
+}
+
+// ─── TimeOff validation ───────────────────────────────────────────────────────
+
+export function validateTimeOff(startAt: Date, endAt: Date): string | null {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  if (startAt < todayStart) {
+    return 'Нельзя создать блокировку в прошлом';
+  }
+  if (endAt <= startAt) {
+    return 'Дата окончания должна быть позже начала';
+  }
+  const diffDays = (endAt.getTime() - startAt.getTime()) / (1000 * 60 * 60 * 24);
+  if (diffDays > 90) {
+    return 'Максимальная длительность блокировки — 90 дней';
+  }
+  return null;
+}
+
+// ─── TimeOff mock data ────────────────────────────────────────────────────────
+
+const mockTimeOffs: TimeOff[] = (() => {
+  const now = new Date();
+  const d = (daysFromNow: number, h = 0, m = 0) => {
+    const dt = new Date(now);
+    dt.setDate(dt.getDate() + daysFromNow);
+    dt.setHours(h, m, 0, 0);
+    return dt.toISOString();
+  };
+  return [
+    { id: 'to1', start_at: d(7),      end_at: d(14, 23, 59), reason: 'Отпуск' },
+    { id: 'to2', start_at: d(2, 15),  end_at: d(2, 16),      reason: 'Врач' },
+  ];
+})();
+
+const mockStore: TimeOff[] = [...mockTimeOffs];
+
+// ─── TimeOff API ──────────────────────────────────────────────────────────────
+
+export const getTimeOffs = async (dateFrom: string, dateTo: string): Promise<TimeOff[]> => {
+  if (IS_MOCK) {
+    return mockStore
+      .filter(t => t.start_at >= dateFrom && t.start_at <= dateTo + 'T23:59:59Z')
+      .sort((a, b) => a.start_at.localeCompare(b.start_at));
+  }
+  const { data } = await getApiClient().get<TimeOff[]>(
+    `/specialists/me/time-off/?date_from=${dateFrom}&date_to=${dateTo}`,
+  );
+  return data;
+};
+
+export const createTimeOff = async (payload: TimeOffCreate): Promise<TimeOff> => {
+  if (IS_MOCK) {
+    const entry: TimeOff = { id: String(Date.now()), ...payload, reason: payload.reason ?? null };
+    mockStore.push(entry);
+    mockStore.sort((a, b) => a.start_at.localeCompare(b.start_at));
+    return entry;
+  }
+  const { data } = await getApiClient().post<TimeOff>('/specialists/me/time-off/', payload);
+  return data;
+};
+
+export const deleteTimeOff = async (id: string): Promise<void> => {
+  if (IS_MOCK) {
+    const idx = mockStore.findIndex(t => t.id === id);
+    if (idx !== -1) mockStore.splice(idx, 1);
+    return;
+  }
+  await getApiClient().delete(`/specialists/me/time-off/${id}/`);
+};
