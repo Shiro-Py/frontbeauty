@@ -7,17 +7,20 @@ const mockRemoveFavorite = jest.fn();
 const mockPush = jest.fn();
 
 jest.mock('@beautygo/shared', () => ({
-  MasterPreviewCard: require('../../../packages/shared/src/components/MasterPreviewCard').default,
+  MasterPreviewCard: jest.requireActual('@beautygo/shared').MasterPreviewCard,
   getFavorites: (...args: any[]) => mockGetFavorites(...args),
   removeFavorite: (...args: any[]) => mockRemoveFavorite(...args),
   toggleFavorite: jest.fn(),
   MasterDetail: {},
 }));
 
-jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush }),
-  useFocusEffect: (cb: () => void) => { cb(); },
-}));
+jest.mock('expo-router', () => {
+  const RealReact = require('react');
+  return {
+    useRouter: jest.fn(() => ({ push: jest.fn() })),
+    useFocusEffect: (cb: any) => RealReact.useEffect(cb, []),
+  };
+});
 
 const mockMaster = {
   id: '1',

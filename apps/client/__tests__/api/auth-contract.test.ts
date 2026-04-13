@@ -1,3 +1,4 @@
+/** @jest-environment node */
 /**
  * API Contract Tests — Auth
  * Проверяют что запросы к API соответствуют контракту:

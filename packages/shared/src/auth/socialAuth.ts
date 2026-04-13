@@ -60,7 +60,7 @@ export function useVKAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const redirectUri = AuthSession.makeRedirectUri();
+  const redirectUri = AuthSession.makeRedirectUri({ scheme: 'beautygo' });
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -72,6 +72,9 @@ export function useVKAuth() {
     },
     VK_DISCOVERY,
   );
+
+  // DEV: выведи этот URI и добавь его в настройки VK-приложения
+  if (__DEV__) console.log('[VK OAuth] redirect_uri:', redirectUri);
 
   useEffect(() => {
     if (response?.type !== 'success') return;

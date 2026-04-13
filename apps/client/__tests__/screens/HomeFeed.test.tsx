@@ -53,8 +53,8 @@ describe('HomeFeedScreen', () => {
 
   it('показывает список мастеров после загрузки', async () => {
     const { findByText } = render(<HomeFeedScreen />);
-    expect(await findByText('Мария И.')).toBeTruthy();
-    expect(await findByText('Ольга С.')).toBeTruthy();
+    expect(await findByText('Мария Иванова')).toBeTruthy();
+    expect(await findByText('Ольга Смирнова')).toBeTruthy();
   });
 
   it('показывает имя пользователя в хедере', async () => {
@@ -78,7 +78,7 @@ describe('HomeFeedScreen', () => {
     const mockPush = jest.fn();
     (useRouter as jest.Mock).mockReturnValue({ push: mockPush });
     const { findByText } = render(<HomeFeedScreen />);
-    const card = await findByText('Мария И.');
+    const card = await findByText('Мария Иванова');
     await act(async () => {
       fireEvent.press(card);
     });
@@ -91,9 +91,9 @@ describe('HomeFeedScreen', () => {
     await act(async () => {
       fireEvent.changeText(searchInput, 'Мария');
     });
-    expect(await findByText('Мария И.')).toBeTruthy();
+    expect(await findByText('Мария Иванова')).toBeTruthy();
     await waitFor(() => {
-      expect(queryByText('Ольга С.')).toBeNull();
+      expect(queryByText('Ольга Смирнова')).toBeNull();
     });
   });
 

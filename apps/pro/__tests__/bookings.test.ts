@@ -1,5 +1,21 @@
 import { mockProStore, ProAppointment, BookingStatus } from '@beautygo/shared';
 
+jest.mock('expo-notifications', () => ({
+  setNotificationHandler: jest.fn(),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addPushTokenListener: jest.fn(() => ({ remove: jest.fn() })),
+  getPermissionsAsync: jest.fn(),
+  requestPermissionsAsync: jest.fn(),
+  getDevicePushTokenAsync: jest.fn(),
+  setBadgeCountAsync: jest.fn(),
+}));
+jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-secure-store', () => ({
+  getItemAsync: jest.fn().mockResolvedValue(null),
+  setItemAsync: jest.fn().mockResolvedValue(undefined),
+  deleteItemAsync: jest.fn().mockResolvedValue(undefined),
+}));
+
 // ─── Helpers (mirror logic from screens) ──────────────────────────────────────
 
 const TERMINAL: BookingStatus[] = ['completed', 'cancelled', 'no_show'];

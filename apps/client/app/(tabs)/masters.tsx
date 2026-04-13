@@ -7,7 +7,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   getSpecialists, toggleFavorite, removeFavorite,
-  isMasterFavorited, getMe,
+  getMe,
   SpecialistListItem,
 } from '@beautygo/shared';
 
@@ -21,21 +21,25 @@ function ratingColor(rating: number): string {
 
 // ─── Master card ──────────────────────────────────────────────────────────────
 
-function MasterCard({ item, onPress }: {
+function MasterCard({ item, isFav, onFav, onPress }: {
   item: SpecialistListItem;
   isFav: boolean;
   onFav: () => void;
   onPress: () => void;
 }) {
   const rColor = ratingColor(item.rating);
-  const services = item.top_services ?? (item.top_service ? [item.top_service] : []);
+  const services = (item.top_services ?? (item.top_service ? [item.top_service] : [])).slice(0, 3);
 
   return (
     <Pressable style={S.card} onPress={onPress}>
-      {/* Top row: avatar + name/meta */}
+      {/* Top row: avatar + name/meta + heart */}
       <View style={S.cardRow}>
         <View style={S.avatar}>
-          <Text style={S.avatarText}>{item.first_name[0]}</Text>
+          {item.avatar_url ? (
+            <Image source={{ uri: item.avatar_url }} style={S.avatarImg} />
+          ) : (
+            <Text style={S.avatarText}>{item.first_name[0]}</Text>
+          )}
         </View>
         <View style={S.cardMeta}>
           <Text style={S.masterName} numberOfLines={1}>
@@ -54,6 +58,13 @@ function MasterCard({ item, onPress }: {
             )}
           </View>
         </View>
+        <Pressable onPress={onFav} hitSlop={12} style={S.favBtn}>
+          <Ionicons
+            name={isFav ? 'heart' : 'heart-outline'}
+            size={20}
+            color={isFav ? '#E53935' : '#D1D5DB'}
+          />
+        </Pressable>
       </View>
 
       {/* Services list */}
@@ -124,7 +135,7 @@ export default function HomeFeedScreen() {
       setItems(data.results);
       setPage(1);
       setHasMore(!!data.next);
-      setFavorites(new Set(data.results.map(s => s.id).filter(isMasterFavorited)));
+      setFavorites(new Set(data.results.filter(s => s.is_favorited).map(s => s.id)));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -279,9 +290,11 @@ const S = StyleSheet.create({
   cardRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   avatar: {
     width: 48, height: 48, borderRadius: 24, backgroundColor: '#F0F0F0',
-    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden',
   },
+  avatarImg: { width: 48, height: 48 },
   avatarText: { fontSize: 18, fontWeight: '700', color: '#1A1A1A' },
+  favBtn: { padding: 4, flexShrink: 0 },
   cardMeta: { flex: 1, gap: 4 },
   masterName: { fontSize: 15, fontWeight: '700', color: '#1A1A1A' },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },

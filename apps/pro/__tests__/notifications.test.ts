@@ -1,9 +1,10 @@
-import { getDeepLinkFromNotification } from '@beautygo/shared';
+import { getDeepLinkFromNotification, requestNotificationPermissions } from '@beautygo/shared';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 const mockGetPermissionsAsync = jest.fn();
 const mockRequestPermissionsAsync = jest.fn();
+const mockSetItemAsync = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('expo-notifications', () => ({
   getPermissionsAsync: (...args: any[]) => mockGetPermissionsAsync(...args),
@@ -19,27 +20,18 @@ jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn().mockResolvedValue(null),
-  setItemAsync: jest.fn().mockResolvedValue(undefined),
+  setItemAsync: (...args: any[]) => mockSetItemAsync(...args),
   deleteItemAsync: jest.fn().mockResolvedValue(undefined),
 }));
 
 // ─── requestNotificationPermissions ──────────────────────────────────────────
 
 describe('requestNotificationPermissions (Pro)', () => {
-  let requestNotificationPermissions: typeof import('@beautygo/shared').requestNotificationPermissions;
-
-  beforeEach(async () => {
-    jest.resetModules();
-    jest.mock('expo-notifications', () => ({
-      getPermissionsAsync: (...args: any[]) => mockGetPermissionsAsync(...args),
-      requestPermissionsAsync: (...args: any[]) => mockRequestPermissionsAsync(...args),
-      setNotificationHandler: jest.fn(),
-      addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
-      addPushTokenListener: jest.fn(() => ({ remove: jest.fn() })),
-      getDevicePushTokenAsync: jest.fn(),
-      setBadgeCountAsync: jest.fn(),
-    }));
-    ({ requestNotificationPermissions } = await import('@beautygo/shared'));
+  beforeEach(() => {
+    mockGetPermissionsAsync.mockReset();
+    mockRequestPermissionsAsync.mockReset();
+    mockSetItemAsync.mockReset();
+    mockSetItemAsync.mockResolvedValue(undefined);
   });
 
   it('returns granted immediately if already granted', async () => {
@@ -58,6 +50,16 @@ describe('requestNotificationPermissions (Pro)', () => {
     mockGetPermissionsAsync.mockResolvedValue({ status: 'undetermined' });
     mockRequestPermissionsAsync.mockResolvedValue({ status: 'denied' });
     expect(await requestNotificationPermissions()).toBe('denied');
+  });
+
+  it('saves declined_at when denied', async () => {
+    mockGetPermissionsAsync.mockResolvedValue({ status: 'undetermined' });
+    mockRequestPermissionsAsync.mockResolvedValue({ status: 'denied' });
+    await requestNotificationPermissions();
+    expect(mockSetItemAsync).toHaveBeenCalledWith(
+      'NOTIFICATIONS_DECLINED_AT',
+      expect.any(String),
+    );
   });
 });
 

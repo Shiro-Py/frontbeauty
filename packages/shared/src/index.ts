@@ -38,7 +38,7 @@ export { getSchedule, patchScheduleDay, validateWorkingDay, timeToMinutes, getTi
 export type { WorkingDay, Schedule, PatchDayPayload, DayOfWeek, TimeOff, TimeOffCreate } from './api/schedule';
 
 // Bookings
-export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments, getProAppointments, getProAppointmentById, completeAppointment, cancelAppointmentWithReason } from './api/bookings';
+export { getSlots, createBooking, getBookings, getBookingById, cancelBooking, getPastAppointments, getUpcomingAppointments, getProAppointments, getProAppointmentById, completeAppointment, cancelAppointmentWithReason, mockProStore } from './api/bookings';
 
 // Notifications
 export { requestNotificationPermissions, getNotificationsDeclinedAt, registerDevicePushToken, addPushTokenRefreshListener, configureForegroundHandler, addNotificationTapListener, getDeepLinkFromNotification } from './notifications';

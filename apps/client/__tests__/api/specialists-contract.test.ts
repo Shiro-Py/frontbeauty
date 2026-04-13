@@ -1,3 +1,4 @@
+/** @jest-environment node */
 /**
  * API Contract Tests — Specialists
  */
@@ -28,7 +29,22 @@ import { getSpecialists, toggleFavorite, removeFavorite } from '../../../../pack
 
 const BASE = 'https://dev.gobeauty.site/api/v1';
 
-let lastRequest: Request | null = null;
+// Сохраняем только нужные поля — Request содержит циклические ссылки
+interface CapturedRequest {
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+}
+
+let lastRequest: CapturedRequest | null = null;
+
+function capture(request: Request): CapturedRequest {
+  return {
+    url: request.url,
+    method: request.method,
+    headers: Object.fromEntries(request.headers.entries()),
+  };
+}
 
 const mockResults = [
   { id: '1', first_name: 'Мария', last_name: 'Иванова', rating: 4.8, reviews_count: 10 },
@@ -37,24 +53,17 @@ const mockResults = [
 
 const server = setupServer(
   http.get(`${BASE}/specialists/`, ({ request }) => {
-    lastRequest = request;
-    const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') ?? '1');
-    const pageSize = parseInt(url.searchParams.get('page_size') ?? '10');
-    return HttpResponse.json({
-      results: mockResults,
-      count: 2,
-      next: null,
-    });
+    lastRequest = capture(request);
+    return HttpResponse.json({ results: mockResults, count: 2, next: null });
   }),
 
-  http.post(`${BASE}/specialists/:id/favorite/`, ({ request, params }) => {
-    lastRequest = request;
+  http.post(`${BASE}/favorites/specialists/:id`, ({ request }) => {
+    lastRequest = capture(request);
     return HttpResponse.json({ ok: true });
   }),
 
-  http.delete(`${BASE}/specialists/:id/favorite/`, ({ request }) => {
-    lastRequest = request;
+  http.delete(`${BASE}/favorites/specialists/:id`, ({ request }) => {
+    lastRequest = capture(request);
     return new HttpResponse(null, { status: 204 });
   }),
 );
@@ -72,12 +81,12 @@ afterAll(() => server.close());
 describe('Specialists API Contract', () => {
   it('GET /specialists/ отправляет X-App-Type: client', async () => {
     await getSpecialists(1, 10);
-    expect(lastRequest!.headers.get('X-App-Type')).toBe('client');
+    expect(lastRequest!.headers['x-app-type']).toBe('client');
   });
 
   it('GET /specialists/ отправляет Authorization: Bearer после auth', async () => {
     await getSpecialists(1, 10);
-    const auth = lastRequest!.headers.get('Authorization');
+    const auth = lastRequest!.headers['authorization'];
     expect(auth).toMatch(/^Bearer .+/);
   });
 
@@ -95,16 +104,16 @@ describe('Specialists API Contract', () => {
     expect(data.next === null || typeof data.next === 'string').toBe(true);
   });
 
-  it('toggleFavorite отправляет POST /specialists/:id/favorite/', async () => {
+  it('toggleFavorite отправляет POST /favorites/specialists/:id', async () => {
     await toggleFavorite('1');
     expect(lastRequest!.method).toBe('POST');
-    expect(lastRequest!.url).toContain('/specialists/1/favorite/');
+    expect(lastRequest!.url).toContain('/favorites/specialists/1');
   });
 
-  it('removeFavorite отправляет DELETE /specialists/:id/favorite/', async () => {
+  it('removeFavorite отправляет DELETE /favorites/specialists/:id', async () => {
     await removeFavorite('1');
     expect(lastRequest!.method).toBe('DELETE');
-    expect(lastRequest!.url).toContain('/specialists/1/favorite/');
+    expect(lastRequest!.url).toContain('/favorites/specialists/1');
   });
 
   it('возвращает 500 → бросает ошибку', async () => {

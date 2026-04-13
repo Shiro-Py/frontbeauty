@@ -5,17 +5,15 @@ import SummaryScreen from '../../app/booking/summary';
 
 const mockGetSlots = jest.fn();
 const mockCreateBooking = jest.fn();
-const mockPush = jest.fn();
-const mockReplace = jest.fn();
-const mockBack = jest.fn();
 
 jest.mock('@beautygo/shared', () => ({
   getSlots: (...args: any[]) => mockGetSlots(...args),
   createBooking: (...args: any[]) => mockCreateBooking(...args),
 }));
 
+// Определяем функции внутри фабрики — они не подвержены hoisting-проблеме
 jest.mock('expo-router', () => ({
-  router: { push: mockPush, replace: mockReplace, back: mockBack },
+  router: { push: jest.fn(), replace: jest.fn(), back: jest.fn() },
   useLocalSearchParams: () => ({
     specialist_id: 'master-1',
     specialist_name: 'Мария Иванова',
@@ -27,6 +25,11 @@ jest.mock('expo-router', () => ({
     time: '10:00',
   }),
 }));
+
+import { router } from 'expo-router';
+const mockPush = router.push as jest.Mock;
+const mockReplace = router.replace as jest.Mock;
+const mockBack = router.back as jest.Mock;
 
 describe('SlotsScreen', () => {
   beforeEach(() => {
