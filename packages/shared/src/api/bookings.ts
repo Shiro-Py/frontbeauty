@@ -217,7 +217,7 @@ export const createBooking = async (
   }
   const api = getApiClient();
   const idempotencyKey = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const { data } = await api.post<Booking>('/appointments', payload, {
+  const { data } = await api.post<Booking>('/appointments/', payload, {
     headers: { 'X-Idempotency-Key': idempotencyKey },
   });
   return data;
@@ -229,7 +229,7 @@ export const getBookings = async (): Promise<Booking[]> => {
     return [...mockBookingsStore];
   }
   const api = getApiClient();
-  const { data } = await api.get<{ results: AppointmentWithDetails[] }>('/appointments');
+  const { data } = await api.get<{ results: AppointmentWithDetails[] }>('/appointments/');
   return data.results.map(mapAppointment);
 };
 
@@ -249,7 +249,7 @@ export const getPastAppointments = async (page = 1, pageSize = 20): Promise<Appo
   }
   const api = getApiClient();
   const { data } = await api.get<{ results: AppointmentWithDetails[]; count: number; next: string | null }>(
-    `/appointments?status=completed,cancelled,no_show&page=${page}&page_size=${pageSize}`,
+    `/appointments/?status=completed,cancelled,no_show&page=${page}&page_size=${pageSize}`,
   );
   return { results: data.results.map(mapAppointment), count: data.count, next: data.next };
 };
@@ -263,7 +263,7 @@ export const getUpcomingAppointments = async (): Promise<Booking[]> => {
   }
   const api = getApiClient();
   const { data } = await api.get<{ results: AppointmentWithDetails[] }>(
-    '/appointments?upcoming=true',
+    '/appointments/?upcoming=true',
   );
   return data.results.map(mapAppointment);
 };
@@ -275,7 +275,7 @@ export const getBookingById = async (id: string): Promise<Booking> => {
     return { ...b };
   }
   const api = getApiClient();
-  const { data } = await api.get<AppointmentWithDetails>(`/appointments/${id}`);
+  const { data } = await api.get<AppointmentWithDetails>(`/appointments/${id}/`);
   return mapAppointment(data);
 };
 
@@ -287,7 +287,7 @@ export const cancelBooking = async (bookingId: string): Promise<void> => {
     return;
   }
   const api = getApiClient();
-  await api.patch(`/appointments/${bookingId}/status`, { status: 'cancelled' });
+  await api.post(`/appointments/${bookingId}/cancel/`, {});
 };
 
 // ─── Pro-specific types ───────────────────────────────────────────────────────

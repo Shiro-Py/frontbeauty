@@ -13,8 +13,8 @@ export interface UserProfile {
 }
 
 export interface VerifyOtpResponse {
-  access: string;
-  refresh: string;
+  access_token: string;
+  refresh_token: string;
   is_new_user: boolean;
   user?: {
     id: string;
@@ -50,7 +50,7 @@ export const sendOtp = async (phone: string): Promise<RequestOtpResponse> => {
     return { expires_in: 300, retry_after: 60, is_new_user: false };
   }
   const api = getApiClient();
-  const { data } = await api.post<RequestOtpResponse>('/auth/request-otp', { phone });
+  const { data } = await api.post<RequestOtpResponse>('/auth/request-otp/', { phone });
   return data;
 };
 
@@ -97,11 +97,11 @@ export const updateClientProfile = async (data: ClientProfileUpdate): Promise<vo
     if (data.last_name) formData.append('last_name', data.last_name);
     if (data.city) formData.append('city', data.city);
     formData.append('avatar', data.avatar as any);
-    await api.patch('/auth/clients/me/', formData, {
+    await api.patch('/users/me/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   } else {
-    await api.patch('/auth/clients/me/', data);
+    await api.patch('/users/me/', data);
   }
 };
 
@@ -147,7 +147,7 @@ export const createMasterProfile = async (data: MasterProfileCreate): Promise<vo
   formData.append('last_name', data.last_name);
   if (data.bio) formData.append('bio', data.bio);
   formData.append('avatar', data.avatar as any);
-  await api.post('/masters/profile/', formData, {
+  await api.post('/specialists/me/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
 };
@@ -193,11 +193,11 @@ export const updateMasterProfile = async (data: MasterProfileUpdate): Promise<vo
     if (data.lat != null) formData.append('lat', String(data.lat));
     if (data.lng != null) formData.append('lng', String(data.lng));
     formData.append('avatar', data.avatar as any);
-    await api.patch('/masters/profile/', formData, {
+    await api.patch('/specialists/me/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   } else {
-    await api.patch('/masters/profile/', data);
+    await api.patch('/specialists/me/', data);
   }
 };
 
@@ -236,7 +236,7 @@ const mockMasterProfile: MasterMyProfile = {
 export const getMasterMe = async (): Promise<MasterMyProfile> => {
   if (IS_MOCK) return { ...mockMasterProfile };
   const api = getApiClient();
-  const { data } = await api.get<MasterMyProfile>('/masters/me/');
+  const { data } = await api.get<MasterMyProfile>('/specialists/me/');
   return data;
 };
 
@@ -265,6 +265,6 @@ export const deleteAccount = async (): Promise<void> => {
 export const getMe = async (): Promise<UserProfile> => {
   if (IS_MOCK) return mockProfile;
   const api = getApiClient();
-  const { data } = await api.get<UserProfile>('/auth/clients/me/');
+  const { data } = await api.get<UserProfile>('/users/me/');
   return data;
 };

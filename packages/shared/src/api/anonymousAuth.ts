@@ -21,7 +21,7 @@ export const initAnonymousSession = async (): Promise<void> => {
   try {
     const api = getApiClient();
     const deviceId = await tokenStorage.getDeviceId();
-    const { data } = await api.post<{ access_token: string }>('/auth/anonymous', {
+    const { data } = await api.post<{ access_token: string }>('/auth/anonymous/', {
       device_id: deviceId,
       platform: Platform.OS,
     });

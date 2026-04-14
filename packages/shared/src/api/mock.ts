@@ -7,8 +7,8 @@ export const IS_MOCK = _envMock !== undefined ? _envMock !== 'false' : __DEV__;
 export const MOCK_CODE = '123456';
 
 export const mockVerifyResponse = (phone: string, isNewUser = false) => ({
-  access: 'mock_access_token',
-  refresh: 'mock_refresh_token',
+  access_token: 'mock_access_token',
+  refresh_token: 'mock_refresh_token',
   is_new_user: isNewUser,
   user: {
     id: 'mock_user_id',

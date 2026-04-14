@@ -102,8 +102,8 @@ export function initializeApiClient(appType: AppType): void {
             { headers: { 'Content-Type': 'application/json', 'X-App-Type': _appType } },
           );
 
-          const newAccess: string = data.access ?? data.data?.access;
-          const newRefresh: string = data.refresh ?? data.data?.refresh ?? refreshToken;
+          const newAccess: string = data.access_token ?? data.data?.access_token;
+          const newRefresh: string = data.refresh_token ?? data.data?.refresh_token ?? refreshToken;
 
           await tokenStorage.save(newAccess, newRefresh);
           processQueue(null, newAccess);
