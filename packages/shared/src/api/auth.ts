@@ -12,6 +12,23 @@ export interface UserProfile {
   avatar_url?: string;
 }
 
+/** Структура GET /users/me/ по спеке (role-based response) */
+export interface UserMeResponse {
+  id: string;
+  phone: string;
+  role: string;
+  is_verified?: boolean;
+  first_name?: string;
+  last_name?: string;
+  city?: string;
+  avatar_url?: string;
+  client_profile?: {
+    id: string;
+    city?: string;
+  };
+  specialist_profile?: MasterMyProfile;
+}
+
 export interface VerifyOtpResponse {
   access_token: string;
   refresh_token: string;
@@ -97,11 +114,11 @@ export const updateClientProfile = async (data: ClientProfileUpdate): Promise<vo
     if (data.last_name) formData.append('last_name', data.last_name);
     if (data.city) formData.append('city', data.city);
     formData.append('avatar', data.avatar as any);
-    await api.patch('/users/me/', formData, {
+    await api.patch('/users/me/client-profile/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   } else {
-    await api.patch('/users/me/', data);
+    await api.patch('/users/me/client-profile/', data);
   }
 };
 
@@ -165,7 +182,7 @@ export interface ServiceData {
 export const createService = async (data: ServiceData): Promise<void> => {
   if (IS_MOCK) return;
   const api = getApiClient();
-  await api.post('/services/', data);
+  await api.post('/specialists/me/services/', data);
 };
 
 export interface MasterProfileUpdate {
@@ -265,6 +282,9 @@ export const deleteAccount = async (): Promise<void> => {
 export const getMe = async (): Promise<UserProfile> => {
   if (IS_MOCK) return mockProfile;
   const api = getApiClient();
-  const { data } = await api.get<UserProfile>('/users/me/');
-  return data;
+  // Backend возвращает UserMeResponse; поля UserProfile — подмножество,
+  // поэтому data совместим с UserProfile. Если backend добавит envelope
+  // { user: {...} }, заменить на: return data.user as UserProfile;
+  const { data } = await api.get<UserMeResponse>('/users/me/');
+  return data as unknown as UserProfile;
 };

@@ -1,5 +1,5 @@
-import { validateWorkingDay, timeToMinutes, validateTimeOff } from '@beautygo/shared';
-import type { WorkingDay } from '@beautygo/shared';
+import { validateWorkingDay, timeToMinutes, validateTimeOff } from '@ayla/shared';
+import type { WorkingDay } from '@ayla/shared';
 
 // ─── timeToMinutes ────────────────────────────────────────────────────────────
 

@@ -1,4 +1,4 @@
-import { mockProStore, ProAppointment, BookingStatus } from '@beautygo/shared';
+import { mockProStore, ProAppointment, BookingStatus } from '@ayla/shared';
 
 jest.mock('expo-notifications', () => ({
   setNotificationHandler: jest.fn(),

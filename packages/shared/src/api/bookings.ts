@@ -279,7 +279,7 @@ export const getBookingById = async (id: string): Promise<Booking> => {
   return mapAppointment(data);
 };
 
-export const cancelBooking = async (bookingId: string): Promise<void> => {
+export const cancelBooking = async (bookingId: string, reason?: string): Promise<void> => {
   if (IS_MOCK) {
     await new Promise(r => setTimeout(r, 400));
     const b = mockBookingsStore.find(b => b.id === bookingId);
@@ -287,7 +287,9 @@ export const cancelBooking = async (bookingId: string): Promise<void> => {
     return;
   }
   const api = getApiClient();
-  await api.post(`/appointments/${bookingId}/cancel/`, {});
+  const body: Record<string, string> = {};
+  if (reason) body.cancellation_reason = reason;
+  await api.post(`/appointments/${bookingId}/cancel/`, body);
 };
 
 // ─── Pro-specific types ───────────────────────────────────────────────────────
@@ -471,5 +473,5 @@ export const cancelAppointmentWithReason = async (id: string, reason: string): P
     if (a) a.status = 'cancelled';
     return;
   }
-  await getApiClient().post(`/appointments/${id}/cancel/`, { reason });
+  await getApiClient().post(`/appointments/${id}/cancel/`, { cancellation_reason: reason });
 };

@@ -8,7 +8,7 @@ import {
   initializeApiClient, AuthProvider, useAuth,
   configureForegroundHandler, addNotificationTapListener,
   registerDevicePushToken, addPushTokenRefreshListener,
-} from '@beautygo/shared';
+} from '@ayla/shared';
 
 // Инициализируем API клиент с X-App-Type: pro
 initializeApiClient('pro');

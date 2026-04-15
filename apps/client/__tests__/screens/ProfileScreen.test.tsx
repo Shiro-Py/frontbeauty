@@ -2,7 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react-native';
 import ProfileScreen from '../../app/(tabs)/profile';
 
-jest.mock('@beautygo/shared', () => ({
+jest.mock('@ayla/shared', () => ({
   useAuth: () => ({ signOut: jest.fn() }),
   getMe: jest.fn().mockResolvedValue({
     first_name: 'Анна',

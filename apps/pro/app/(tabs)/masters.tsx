@@ -9,7 +9,7 @@ import { router } from 'expo-router';
 import {
   getSchedule, patchScheduleDay, validateWorkingDay,
   WorkingDay, DayOfWeek,
-} from '@beautygo/shared';
+} from '@ayla/shared';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

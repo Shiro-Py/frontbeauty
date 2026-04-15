@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { createMasterProfile } from '@beautygo/shared';
+import { createMasterProfile } from '@ayla/shared';
 
 const BIO_MAX = 300;
 

@@ -153,6 +153,13 @@ export interface MasterReview {
   created_at: string;
 }
 
+export interface ReviewsResponse {
+  results: MasterReview[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+}
+
 // — MOCK DATA —
 const mockMaster: MasterDetail = {
   id: '1',
@@ -216,11 +223,17 @@ export const getMasterServices = async (specialistId: string): Promise<MasterSer
   return data;
 };
 
-export const getMasterReviews = async (specialistId: string): Promise<MasterReview[]> => {
-  if (IS_MOCK) return mockReviews;
+export const getMasterReviews = async (
+  specialistId: string,
+  page = 1,
+): Promise<ReviewsResponse> => {
+  if (IS_MOCK) {
+    return { results: mockReviews, count: mockReviews.length, next: null, previous: null };
+  }
   const api = getApiClient();
-  const { data } = await api.get<{ results: MasterReview[] }>(`/specialists/${specialistId}/reviews/`);
-  return data.results;
+  const { data } = await api.get<ReviewsResponse>(
+    `/specialists/${specialistId}/reviews/?page=${page}`,
+  );
   return data;
 };
 

@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { updateClientProfile, useAuth, tokenStorage } from '@beautygo/shared';
+import { updateClientProfile, useAuth, tokenStorage } from '@ayla/shared';
 
 export default function OnboardingScreen() {
   const { signIn } = useAuth();

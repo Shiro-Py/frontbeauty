@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { sendOtp, verifyOtp, useAuth, tokenStorage } from '@beautygo/shared';
+import { sendOtp, verifyOtp, useAuth, tokenStorage } from '@ayla/shared';
 
 const CODE_LENGTH = 6;
 const RESEND_TIMEOUT = 60;

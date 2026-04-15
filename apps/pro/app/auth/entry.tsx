@@ -1,6 +1,6 @@
 import { View, Text, Pressable, StyleSheet, Image, Linking } from 'react-native';
 import { router } from 'expo-router';
-import { SocialAuthButtons } from '@beautygo/shared';
+import { SocialAuthButtons } from '@ayla/shared';
 export default function EntryScreen() {
   return (
     <View style={styles.container}>

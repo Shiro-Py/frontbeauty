@@ -9,7 +9,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import {
   getProAppointmentById, completeAppointment, cancelAppointmentWithReason,
   ProAppointment, BookingStatus,
-} from '@beautygo/shared';
+} from '@ayla/shared';
 
 // ─── Status config ────────────────────────────────────────────────────────────
 

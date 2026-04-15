@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getBookingById, cancelBooking, Booking, BookingStatus } from '@beautygo/shared';
+import { getBookingById, cancelBooking, Booking, BookingStatus } from '@ayla/shared';
 
 const MONTHS_RU = [
   'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
@@ -104,6 +104,8 @@ export default function BookingDetailScreen() {
               const code = e?.response?.data?.error?.code;
               if (code === 'CANCELLATION_NOT_ALLOWED') {
                 Alert.alert('Отмена недоступна', 'Политика отмены не позволяет отменить эту запись');
+              } else if (code === 'INVALID_STATUS') {
+                Alert.alert('Отмена недоступна', 'Запись уже нельзя отменить в текущем статусе');
               } else {
                 Alert.alert('Ошибка', 'Не удалось отменить запись');
               }

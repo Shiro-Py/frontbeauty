@@ -1,4 +1,4 @@
-import { getDeepLinkFromNotification, requestNotificationPermissions } from '@beautygo/shared';
+import { getDeepLinkFromNotification, requestNotificationPermissions } from '@ayla/shared';
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 

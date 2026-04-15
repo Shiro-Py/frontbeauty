@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Image, Linking, Platform } from 'react-native';
 import { router } from 'expo-router';
-import { useVKAuth, useGoogleAuth, useAppleAuth, tokenStorage } from '@beautygo/shared';
+import { useVKAuth, useGoogleAuth, useAppleAuth, tokenStorage } from '@ayla/shared';
 import { onboardingStorage } from '../../utils/onboardingStorage';
 
 // ─── Social button ─────────────────────────────────────────────────────────────

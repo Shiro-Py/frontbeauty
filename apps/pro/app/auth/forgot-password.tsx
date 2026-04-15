@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { sendOtp, verifyOtp, useAuth, tokenStorage } from '@beautygo/shared';
+import { sendOtp, verifyOtp, useAuth, tokenStorage } from '@ayla/shared';
 
 // ─── Утилиты форматирования телефона ────────────────────────────────────────
 

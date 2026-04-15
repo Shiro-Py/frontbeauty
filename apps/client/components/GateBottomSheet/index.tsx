@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
-import { sendOtp, verifyOtp, useAuth, tokenStorage, updateClientProfile } from '@beautygo/shared';
+import { sendOtp, verifyOtp, useAuth, tokenStorage, updateClientProfile } from '@ayla/shared';
 import { onboardingStorage } from '../../utils/onboardingStorage';
 
 export type GateTrigger = 'booking' | 'review' | 'favorite';

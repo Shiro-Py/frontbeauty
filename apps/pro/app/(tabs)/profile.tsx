@@ -9,7 +9,7 @@ import {
   getMasterMe, updateMasterProfile, useAuth,
   getServices, addService, updateService, deleteService,
   MasterMyProfile, Service,
-} from '@beautygo/shared';
+} from '@ayla/shared';
 
 // ─── Verification badge ───────────────────────────────────────────────────────
 

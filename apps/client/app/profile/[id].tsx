@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   getMasterDetail, getMasterServices, getMasterReviews, toggleFavorite, removeFavorite,
   MasterDetail, MasterService, MasterReview,
-} from '@beautygo/shared';
+} from '@ayla/shared';
 
 const CATEGORY_LABELS: Record<string, string> = {
   hair: 'Волосы', nails: 'Маникюр', brows: 'Брови / ресницы',
@@ -77,7 +77,7 @@ export default function MasterProfileScreen() {
       .then(([m, s, r]) => {
         setMaster(m);
         setServices(s);
-        setReviews(r);
+        setReviews(r.results);
       })
       .catch(() => Alert.alert('Ошибка', 'Не удалось загрузить профиль'))
       .finally(() => setLoading(false));

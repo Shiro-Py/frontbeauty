@@ -5,8 +5,8 @@ import {
   KeyboardAvoidingView, Platform, Animated,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { getServices, addService, updateService, deleteService } from '@beautygo/shared';
-import type { Service } from '@beautygo/shared';
+import { getServices, addService, updateService, deleteService } from '@ayla/shared';
+import type { Service } from '@ayla/shared';
 
 // ─── Константы ────────────────────────────────────────────────────────────────
 

@@ -9,7 +9,7 @@ import {
   getSpecialists, toggleFavorite, removeFavorite,
   getMe,
   SpecialistListItem,
-} from '@beautygo/shared';
+} from '@ayla/shared';
 
 const PAGE_SIZE = 10;
 

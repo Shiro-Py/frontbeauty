@@ -6,7 +6,7 @@ jest.mock('expo-router', () => ({
   router: { push: jest.fn(), back: jest.fn(), replace: jest.fn() },
 }));
 
-jest.mock('@beautygo/shared', () => ({
+jest.mock('@ayla/shared', () => ({
   useVKAuth: jest.fn(() => ({ ready: true, loading: false, error: null, signInWithVK: jest.fn() })),
   useGoogleAuth: jest.fn(() => ({ ready: true, loading: false, error: null, signInWithGoogle: jest.fn() })),
   useAppleAuth: jest.fn(() => ({ available: false, loading: false, error: null, signInWithApple: jest.fn() })),
@@ -60,7 +60,7 @@ describe('EntryScreen', () => {
 
   it('кнопка Google вызывает signInWithGoogle', async () => {
     const mockSignIn = jest.fn();
-    const { useGoogleAuth } = require('@beautygo/shared');
+    const { useGoogleAuth } = require('@ayla/shared');
     useGoogleAuth.mockReturnValue({ ready: true, loading: false, error: null, signInWithGoogle: mockSignIn });
     const { findByText } = render(<EntryScreen />);
     fireEvent.press(await findByText('Войти с Google'));
@@ -68,7 +68,7 @@ describe('EntryScreen', () => {
   });
 
   it('кнопка Google disabled когда ready=false', async () => {
-    const { useGoogleAuth } = require('@beautygo/shared');
+    const { useGoogleAuth } = require('@ayla/shared');
     useGoogleAuth.mockReturnValue({ ready: false, loading: false, error: null, signInWithGoogle: jest.fn() });
     const { findByText } = render(<EntryScreen />);
     const btn = (await findByText('Войти с Google')).parent?.parent;

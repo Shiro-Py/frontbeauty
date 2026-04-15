@@ -7,7 +7,7 @@ import {
   initializeApiClient, AuthProvider, useAuth, initAnonymousSession, setGateHandler,
   configureForegroundHandler, addNotificationTapListener,
   registerDevicePushToken, addPushTokenRefreshListener,
-} from '@beautygo/shared';
+} from '@ayla/shared';
 import GateBottomSheet, { GateTrigger } from '../components/GateBottomSheet';
 
 // Инициализируем API клиент с X-App-Type: client

@@ -10,7 +10,7 @@ jest.mock('expo-router', () => {
   };
 });
 
-jest.mock('@beautygo/shared', () => ({
+jest.mock('@ayla/shared', () => ({
   getSpecialists: jest.fn(),
   getMe: jest.fn(),
   toggleFavorite: jest.fn().mockResolvedValue(undefined),
@@ -20,7 +20,7 @@ jest.mock('@beautygo/shared', () => ({
 
 import HomeFeedScreen from '../../app/(tabs)/masters';
 import { useRouter } from 'expo-router';
-import { getSpecialists, getMe } from '@beautygo/shared';
+import { getSpecialists, getMe } from '@ayla/shared';
 
 const mockGetSpecialists = getSpecialists as jest.Mock;
 const mockGetMe = getMe as jest.Mock;

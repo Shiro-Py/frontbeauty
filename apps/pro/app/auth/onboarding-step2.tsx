@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
-import { createService, updateMasterProfile, useAuth, tokenStorage } from '@beautygo/shared';
+import { createService, updateMasterProfile, useAuth, tokenStorage } from '@ayla/shared';
 
 const SERVICE_CATEGORIES = [
   { id: 'hair', label: 'Волосы' },

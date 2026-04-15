@@ -33,7 +33,7 @@ const server = setupServer(
     const body = (await request.json()) as { code: string };
     if (body.code === '123456') {
       return HttpResponse.json({
-        access: 'test-access', refresh: 'test-refresh', is_new_user: false,
+        access_token: 'test-access', refresh_token: 'test-refresh', is_new_user: false,
       });
     }
     return HttpResponse.json({ error: { code: 'INVALID_OTP' } }, { status: 400 });
@@ -80,7 +80,7 @@ describe('Auth API Contract', () => {
     server.use(
       http.post(`${BASE}/auth/verify-otp/`, async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({ access: 'a', refresh: 'r', is_new_user: false });
+        return HttpResponse.json({ access_token: 'a', refresh_token: 'r', is_new_user: false });
       }),
     );
     await verifyOtp('+79001234567', '123456', 'device-123');
@@ -89,10 +89,10 @@ describe('Auth API Contract', () => {
     expect(body.device_id).toBe('device-123');
   });
 
-  it('verifyOtp возвращает access и refresh при коде 123456', async () => {
+  it('verifyOtp возвращает access_token и refresh_token при коде 123456', async () => {
     const res = await verifyOtp('+79001234567', '123456', 'device-id');
-    expect(res.access).toBe('test-access');
-    expect(res.refresh).toBe('test-refresh');
+    expect(res.access_token).toBe('test-access');
+    expect(res.refresh_token).toBe('test-refresh');
     expect(typeof res.is_new_user).toBe('boolean');
   });
 

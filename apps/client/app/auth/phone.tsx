@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { sendOtp } from '@beautygo/shared';
+import { sendOtp } from '@ayla/shared';
 
 function formatPhone(digits: string): string {
   const d = digits.slice(0, 10);

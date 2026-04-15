@@ -1,17 +1,17 @@
 {
-  "name": "beautygo-mobile",
+  "name": "ayla-mobile",
   "private": true,
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "client": "yarn workspace @beautygo/client start",
-    "pro": "yarn workspace @beautygo/pro start",
-    "client:android": "yarn workspace @beautygo/client android",
-    "pro:android": "yarn workspace @beautygo/pro android",
-    "client:ios": "yarn workspace @beautygo/client ios",
-    "pro:ios": "yarn workspace @beautygo/pro ios"
+    "client": "yarn workspace @ayla/client start",
+    "pro": "yarn workspace @ayla/pro start",
+    "client:android": "yarn workspace @ayla/client android",
+    "pro:android": "yarn workspace @ayla/pro android",
+    "client:ios": "yarn workspace @ayla/client ios",
+    "pro:ios": "yarn workspace @ayla/pro ios"
   },
   "devDependencies": {
     "typescript": "~5.9.2"

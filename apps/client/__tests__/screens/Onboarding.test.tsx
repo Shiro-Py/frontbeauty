@@ -7,7 +7,7 @@ const mockSignIn = jest.fn();
 const mockGetAccess = jest.fn().mockResolvedValue('access-token');
 const mockGetRefresh = jest.fn().mockResolvedValue('refresh-token');
 
-jest.mock('@beautygo/shared', () => ({
+jest.mock('@ayla/shared', () => ({
   updateClientProfile: (...args: any[]) => mockUpdateClientProfile(...args),
   useAuth: () => ({ signIn: mockSignIn }),
   tokenStorage: {

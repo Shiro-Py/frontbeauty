@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { submitReview } from '@beautygo/shared';
+import { submitReview } from '@ayla/shared';
 
 // ─── Rating buttons ────────────────────────────────────────────────────────────
 

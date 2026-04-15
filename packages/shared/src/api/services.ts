@@ -101,12 +101,12 @@ export const updateService = async (id: string, payload: ServiceUpdateData): Pro
     if (payload.category !== undefined) form.append('category', payload.category);
     if (payload.is_active !== undefined) form.append('is_active', String(payload.is_active));
     form.append('image', payload.photo as any);
-    const { data } = await api.patch<Service>(`/specialists/me/services//${id}`, form, {
+    const { data } = await api.patch<Service>(`/specialists/me/services/${id}/`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return data;
   }
-  const { data } = await api.patch<Service>(`/specialists/me/services//${id}`, payload);
+  const { data } = await api.patch<Service>(`/specialists/me/services/${id}/`, payload);
   return data;
 };
 
@@ -117,5 +117,5 @@ export const deleteService = async (id: string): Promise<void> => {
     return;
   }
   const api = getApiClient();
-  await api.delete(`/specialists/me/services//${id}`);
+  await api.delete(`/specialists/me/services/${id}/`);
 };

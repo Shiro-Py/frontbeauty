@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
 import * as Notifications from 'expo-notifications';
-import { getProAppointments, ProAppointment, BookingStatus } from '@beautygo/shared';
+import { getProAppointments, ProAppointment, BookingStatus } from '@ayla/shared';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

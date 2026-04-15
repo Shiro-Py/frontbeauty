@@ -6,8 +6,8 @@ const mockGetFavorites = jest.fn();
 const mockRemoveFavorite = jest.fn();
 const mockPush = jest.fn();
 
-jest.mock('@beautygo/shared', () => ({
-  MasterPreviewCard: jest.requireActual('@beautygo/shared').MasterPreviewCard,
+jest.mock('@ayla/shared', () => ({
+  MasterPreviewCard: jest.requireActual('@ayla/shared').MasterPreviewCard,
   getFavorites: (...args: any[]) => mockGetFavorites(...args),
   removeFavorite: (...args: any[]) => mockRemoveFavorite(...args),
   toggleFavorite: jest.fn(),

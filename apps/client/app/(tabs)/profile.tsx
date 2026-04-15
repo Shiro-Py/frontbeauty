@@ -5,8 +5,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { getMe, updateClientProfile, deleteAccount, useAuth } from '@beautygo/shared';
-import type { UserProfile } from '@beautygo/shared';
+import { getMe, updateClientProfile, deleteAccount, useAuth } from '@ayla/shared';
+import type { UserProfile } from '@ayla/shared';
 
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '').replace(/^7/, '').replace(/^8/, '');

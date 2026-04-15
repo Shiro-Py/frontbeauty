@@ -102,8 +102,14 @@ export function initializeApiClient(appType: AppType): void {
             { headers: { 'Content-Type': 'application/json', 'X-App-Type': _appType } },
           );
 
-          const newAccess: string = data.access_token ?? data.data?.access_token;
-          const newRefresh: string = data.refresh_token ?? data.data?.refresh_token ?? refreshToken;
+          // Поддержка трёх форматов ответа:
+          // 1. BeautyGO custom: { access_token, refresh_token }
+          // 2. DRF success envelope: { data: { access_token, refresh_token } }
+          // 3. SimpleJWT default: { access, refresh }
+          const newAccess: string =
+            data.access_token ?? data.data?.access_token ?? data.access;
+          const newRefresh: string =
+            data.refresh_token ?? data.data?.refresh_token ?? data.refresh ?? refreshToken;
 
           await tokenStorage.save(newAccess, newRefresh);
           processQueue(null, newAccess);

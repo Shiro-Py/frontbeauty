@@ -9,7 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import {
   getPastAppointments, getUpcomingAppointments,
   Booking, BookingStatus,
-} from '@beautygo/shared';
+} from '@ayla/shared';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

@@ -24,12 +24,25 @@ import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { initializeApiClient } from '../../../../packages/shared/src/api/client';
 import { submitReview } from '../../../../packages/shared/src/api/reviews';
+import { getMasterReviews } from '../../../../packages/shared/src/api/masters';
 
 const BASE = 'https://dev.gobeauty.site/api/v1';
 
 let lastRequest: Request | null = null;
 
 const server = setupServer(
+  http.get(`${BASE}/specialists/:id/reviews/`, ({ request, params }) => {
+    lastRequest = request;
+    return HttpResponse.json({
+      results: [
+        { id: 'r1', author_name: 'Анна', rating: 5, text: 'Отлично!', created_at: '2026-01-01T00:00:00Z' },
+      ],
+      count: 1,
+      next: null,
+      previous: null,
+    });
+  }),
+
   http.post(`${BASE}/reviews/`, async ({ request }) => {
     lastRequest = request.clone();
     const body = (await request.json()) as any;
@@ -138,6 +151,56 @@ describe('Reviews API Contract', () => {
     );
     await expect(submitReview(validPayload)).rejects.toMatchObject({
       response: expect.objectContaining({ status: 500 }),
+    });
+  });
+});
+
+describe('getMasterReviews — GET /specialists/{id}/reviews/ [MOB][F3]', () => {
+  it('запрашивает правильный URL с id специалиста', async () => {
+    await getMasterReviews('spec-42');
+    expect(lastRequest!.url).toContain('/specialists/spec-42/reviews/');
+  });
+
+  it('возвращает { results, count, next, previous }', async () => {
+    const res = await getMasterReviews('spec-42');
+    expect(Array.isArray(res.results)).toBe(true);
+    expect(typeof res.count).toBe('number');
+    expect('next' in res).toBe(true);
+    expect('previous' in res).toBe(true);
+  });
+
+  it('результаты содержат поля MasterReview', async () => {
+    const res = await getMasterReviews('spec-42');
+    const review = res.results[0];
+    expect(review).toMatchObject({
+      id: expect.any(String),
+      author_name: expect.any(String),
+      rating: expect.any(Number),
+      text: expect.any(String),
+      created_at: expect.any(String),
+    });
+  });
+
+  it('передаёт параметр page в URL', async () => {
+    let capturedUrl = '';
+    server.use(
+      http.get(`${BASE}/specialists/:id/reviews/`, ({ request }) => {
+        capturedUrl = request.url;
+        return HttpResponse.json({ results: [], count: 0, next: null, previous: null });
+      }),
+    );
+    await getMasterReviews('spec-42', 3);
+    expect(capturedUrl).toContain('page=3');
+  });
+
+  it('бросает ошибку при 404 (специалист не найден)', async () => {
+    server.use(
+      http.get(`${BASE}/specialists/:id/reviews/`, () =>
+        HttpResponse.json({ error: { code: 'NOT_FOUND' } }, { status: 404 }),
+      ),
+    );
+    await expect(getMasterReviews('nonexistent')).rejects.toMatchObject({
+      response: expect.objectContaining({ status: 404 }),
     });
   });
 });

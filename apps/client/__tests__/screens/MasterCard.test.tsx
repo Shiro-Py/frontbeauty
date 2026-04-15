@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { MasterPreviewCard } from '@beautygo/shared';
+import { MasterPreviewCard } from '@ayla/shared';
 
 const mockOnPress = jest.fn();
 const mockOnFavorite = jest.fn();

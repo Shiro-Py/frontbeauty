@@ -5,8 +5,8 @@ module.exports = {
     'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@unimodules/.*|unimodules|sentry-expo|native-base|react-native-svg|@beautygo/.*|msw|@mswjs/.*|until-async)',
   ],
   moduleNameMapper: {
-    '^@beautygo/shared$': '<rootDir>/../../packages/shared/src/index.ts',
-    '^@beautygo/shared/(.*)': '<rootDir>/../../packages/shared/src/$1',
+    '^@ayla/shared$': '<rootDir>/../../packages/shared/src/index.ts',
+    '^@ayla/shared/(.*)': '<rootDir>/../../packages/shared/src/$1',
   },
   globals: {
     __DEV__: false,

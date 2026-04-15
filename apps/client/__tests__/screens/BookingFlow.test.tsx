@@ -6,7 +6,7 @@ import SummaryScreen from '../../app/booking/summary';
 const mockGetSlots = jest.fn();
 const mockCreateBooking = jest.fn();
 
-jest.mock('@beautygo/shared', () => ({
+jest.mock('@ayla/shared', () => ({
   getSlots: (...args: any[]) => mockGetSlots(...args),
   createBooking: (...args: any[]) => mockCreateBooking(...args),
 }));

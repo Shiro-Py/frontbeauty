@@ -6,7 +6,7 @@ const mockVerifyOtp = jest.fn();
 const mockSendOtp = jest.fn();
 const mockSignIn = jest.fn();
 
-jest.mock('@beautygo/shared', () => ({
+jest.mock('@ayla/shared', () => ({
   verifyOtp: (...args: any[]) => mockVerifyOtp(...args),
   sendOtp: (...args: any[]) => mockSendOtp(...args),
   useAuth: () => ({ signIn: mockSignIn }),

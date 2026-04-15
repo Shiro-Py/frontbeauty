@@ -9,13 +9,13 @@ jest.mock('expo-router', () => ({
   router: { back: jest.fn(), push: jest.fn() },
 }));
 
-jest.mock('@beautygo/shared', () => ({
+jest.mock('@ayla/shared', () => ({
   submitReview: jest.fn(),
 }));
 
 import ReviewScreen from '../../app/review/[id]';
 import { router } from 'expo-router';
-import { submitReview } from '@beautygo/shared';
+import { submitReview } from '@ayla/shared';
 
 const mockSubmit = submitReview as jest.Mock;
 const mockBack = router.back as jest.Mock;

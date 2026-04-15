@@ -6,13 +6,13 @@ jest.mock('expo-router', () => ({
   router: { push: jest.fn(), back: jest.fn() },
 }));
 
-jest.mock('@beautygo/shared', () => ({
+jest.mock('@ayla/shared', () => ({
   sendOtp: jest.fn().mockResolvedValue({ expires_in: 300, retry_after: 60, is_new_user: false }),
 }));
 
 import PhoneScreen from '../../app/auth/phone';
 import { router } from 'expo-router';
-import { sendOtp } from '@beautygo/shared';
+import { sendOtp } from '@ayla/shared';
 
 const push = router.push as jest.Mock;
 const mockSendOtp = sendOtp as jest.Mock;
