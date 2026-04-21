@@ -23,11 +23,15 @@ export { useVKAuth, useGoogleAuth, useAppleAuth, useYandexAuth } from './auth/so
 
 // Masters
 export { getMasterDetail, getMasterServices, getMasterReviews, toggleFavorite, removeFavorite, getFavorites, getSpecialists, isMasterFavorited } from './api/masters';
-export type { MasterDetail, MasterService, MasterReview, SpecialistListItem, SpecialistsPage } from './api/masters';
+export type { MasterDetail, MasterService, MasterReview, SpecialistListItem, SpecialistsPage, ReviewsResponse, ServicePreview } from './api/masters';
 
 // Services CRUD
 export { getServices, addService, updateService, deleteService } from './api/services';
 export type { Service, ServiceCreateData, ServiceUpdateData } from './api/services';
+
+// Payments
+export { createPayment, getPaymentStatus, getSavedCards, deleteSavedCard, getPaymentHistory } from './api/payments';
+export type { SavedCard, PaymentStatus, PaymentResult, PaymentHistoryItem } from './api/payments';
 
 // Reviews
 export { submitReview } from './api/reviews';

@@ -5,8 +5,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { getMe, updateClientProfile, deleteAccount, useAuth } from '@ayla/shared';
-import type { UserProfile } from '@ayla/shared';
+import { getMe, updateClientProfile, deleteAccount, useAuth, getPaymentHistory } from '@ayla/shared';
+import type { UserProfile, PaymentHistoryItem } from '@ayla/shared';
 
 function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, '').replace(/^7/, '').replace(/^8/, '');
@@ -27,6 +27,8 @@ export default function ProfileScreen() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
+  const [historyExpanded, setHistoryExpanded] = useState(false);
 
   // edit state
   const [firstName, setFirstName] = useState('');
@@ -47,6 +49,7 @@ export default function ProfileScreen() {
       } finally {
         setLoading(false);
       }
+      getPaymentHistory().then(setPaymentHistory).catch(() => {});
     })();
   }, []);
 
@@ -258,6 +261,62 @@ export default function ProfileScreen() {
         </View>
       )}
 
+      {/* История платежей */}
+      {paymentHistory.length > 0 && (
+        <View style={styles.historySection}>
+          <Pressable style={styles.historyHeader} onPress={() => setHistoryExpanded(e => !e)}>
+            <View style={styles.historyTitleRow}>
+              <Ionicons name="card-outline" size={18} color="#7B61FF" />
+              <Text style={styles.historyTitle}>История платежей</Text>
+            </View>
+            <Ionicons
+              name={historyExpanded ? 'chevron-up' : 'chevron-down'}
+              size={18} color="#9CA3AF"
+            />
+          </Pressable>
+          {historyExpanded && (
+            <View style={styles.historyList}>
+              {paymentHistory.map((item, i) => (
+                <View key={item.id}>
+                  <View style={styles.historyItem}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.historyService} numberOfLines={1}>{item.service_name}</Text>
+                      <Text style={styles.historyMaster} numberOfLines={1}>{item.specialist_name}</Text>
+                      <Text style={styles.historyDate}>
+                        {new Date(item.created_at).toLocaleDateString('ru-RU')}
+                      </Text>
+                    </View>
+                    <View style={styles.historyRight}>
+                      <Text style={styles.historyAmount}>
+                        {item.amount.toLocaleString('ru-RU')} ₽
+                      </Text>
+                      <View style={[
+                        styles.historyBadge,
+                        item.status === 'succeeded' && styles.historyBadgeSuccess,
+                        item.status === 'canceled'  && styles.historyBadgeCanceled,
+                        item.status === 'refunded'  && styles.historyBadgeRefunded,
+                      ]}>
+                        <Text style={[
+                          styles.historyBadgeText,
+                          item.status === 'succeeded' && styles.historyBadgeTextSuccess,
+                          item.status === 'canceled'  && styles.historyBadgeTextCanceled,
+                          item.status === 'refunded'  && styles.historyBadgeTextRefunded,
+                        ]}>
+                          {item.status === 'succeeded' ? 'Оплачено'
+                            : item.status === 'refunded' ? 'Возврат'
+                            : 'Отменён'}
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                  {i < paymentHistory.length - 1 && <View style={styles.historyDivider} />}
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
+
       <View style={styles.divider} />
 
       {/* Выйти */}
@@ -387,6 +446,37 @@ const styles = StyleSheet.create({
   saveButtonText: { fontSize: 15, color: '#fff', fontWeight: '600' },
 
   divider: { height: 1, backgroundColor: '#F0EBF8', marginBottom: 20 },
+
+  historySection: { marginBottom: 20 },
+  historyHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 14, paddingHorizontal: 16,
+    backgroundColor: '#F8F7FF', borderRadius: 14,
+  },
+  historyTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  historyTitle: { fontSize: 15, fontWeight: '600', color: '#1A1628' },
+  historyList: { marginTop: 8, backgroundColor: '#F8F7FF', borderRadius: 14, overflow: 'hidden' },
+  historyItem: {
+    flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 12,
+  },
+  historyService: { fontSize: 14, fontWeight: '600', color: '#1A1628', marginBottom: 2 },
+  historyMaster: { fontSize: 12, color: '#7A7286', marginBottom: 2 },
+  historyDate: { fontSize: 12, color: '#B0A8B9' },
+  historyRight: { alignItems: 'flex-end', gap: 6 },
+  historyAmount: { fontSize: 14, fontWeight: '700', color: '#1A1628' },
+  historyBadge: {
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
+    backgroundColor: '#F0EBF8',
+  },
+  historyBadgeSuccess: { backgroundColor: '#DCFCE7' },
+  historyBadgeCanceled: { backgroundColor: '#FEE2E2' },
+  historyBadgeRefunded: { backgroundColor: '#FEF3C7' },
+  historyBadgeText: { fontSize: 11, fontWeight: '600', color: '#7A7286' },
+  historyBadgeTextSuccess: { color: '#16A34A' },
+  historyBadgeTextCanceled: { color: '#DC2626' },
+  historyBadgeTextRefunded: { color: '#D97706' },
+  historyDivider: { height: 1, backgroundColor: '#EDE8FF', marginHorizontal: 16 },
 
   logoutButton: {
     flexDirection: 'row', alignItems: 'center', gap: 10,

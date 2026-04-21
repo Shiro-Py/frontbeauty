@@ -2,16 +2,31 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TextInput,
   ActivityIndicator, RefreshControl, Pressable, Image,
+  Modal, Animated, Dimensions, ScrollView,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   getSpecialists, toggleFavorite, removeFavorite,
-  getMe,
-  SpecialistListItem,
+  getMe, getSlots,
+  SpecialistListItem, ServicePreview,
 } from '@ayla/shared';
 
 const PAGE_SIZE = 10;
+const SCREEN_H = Dimensions.get('window').height;
+
+function todayIso(): string {
+  return new Date().toISOString().split('T')[0];
+}
+function tomorrowIso(): string {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+}
+function fmtNextSlot(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
 
 function ratingColor(rating: number): string {
   if (rating >= 4) return '#22C55E';
@@ -19,16 +34,133 @@ function ratingColor(rating: number): string {
   return '#E53935';
 }
 
+// ─── Service sheet ────────────────────────────────────────────────────────────
+
+function ServiceSheet({ visible, services, onSelect, onClose }: {
+  visible: boolean;
+  services: ServicePreview[];
+  onSelect: (svc: ServicePreview) => void;
+  onClose: () => void;
+}) {
+  const anim = useRef(new Animated.Value(SCREEN_H)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(anim, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
+    } else {
+      Animated.timing(anim, { toValue: SCREEN_H, duration: 220, useNativeDriver: true }).start();
+    }
+  }, [visible, anim]);
+
+  return (
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <Pressable style={S.overlay} onPress={onClose} />
+      <Animated.View style={[S.sheet, { transform: [{ translateY: anim }] }]}>
+        <View style={S.sheetHandle} />
+        <Text style={S.sheetTitle}>Выберите услугу</Text>
+        {services.map(svc => (
+          <Pressable key={svc.id} style={S.svcItem} onPress={() => onSelect(svc)}>
+            <View style={{ flex: 1 }}>
+              <Text style={S.svcName}>{svc.name}</Text>
+              <Text style={S.svcMeta}>{svc.duration_minutes} мин</Text>
+            </View>
+            <Text style={S.svcPrice}>{svc.price.toLocaleString('ru-RU')} ₽</Text>
+          </Pressable>
+        ))}
+        <View style={{ height: 20 }} />
+      </Animated.View>
+    </Modal>
+  );
+}
+
+// ─── Slot sheet ───────────────────────────────────────────────────────────────
+
+function SlotSheet({ visible, todaySlots, tomorrowSlots, loading, onSelect, onOtherTime, onClose }: {
+  visible: boolean;
+  todaySlots: string[];
+  tomorrowSlots: string[];
+  loading: boolean;
+  onSelect: (date: string, time: string) => void;
+  onOtherTime: () => void;
+  onClose: () => void;
+}) {
+  const anim = useRef(new Animated.Value(SCREEN_H)).current;
+
+  useEffect(() => {
+    if (visible) {
+      Animated.spring(anim, { toValue: 0, useNativeDriver: true, bounciness: 0 }).start();
+    } else {
+      Animated.timing(anim, { toValue: SCREEN_H, duration: 220, useNativeDriver: true }).start();
+    }
+  }, [visible, anim]);
+
+  const today = todayIso();
+  const tomorrow = tomorrowIso();
+
+  return (
+    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+      <Pressable style={S.overlay} onPress={onClose} />
+      <Animated.View style={[S.sheet, S.slotSheet, { transform: [{ translateY: anim }] }]}>
+        <View style={S.sheetHandle} />
+        <Text style={S.sheetTitle}>Выберите время</Text>
+
+        {loading ? (
+          <View style={S.slotLoading}>
+            <ActivityIndicator color="#7B61FF" />
+          </View>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {todaySlots.length > 0 && (
+              <>
+                <Text style={S.slotDayLabel}>Сегодня</Text>
+                <View style={S.slotGrid}>
+                  {todaySlots.map(t => (
+                    <Pressable key={t} style={S.slotChip} onPress={() => onSelect(today, t)}>
+                      <Text style={S.slotChipText}>{t}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </>
+            )}
+            {tomorrowSlots.length > 0 && (
+              <>
+                <Text style={S.slotDayLabel}>Завтра</Text>
+                <View style={S.slotGrid}>
+                  {tomorrowSlots.map(t => (
+                    <Pressable key={t} style={S.slotChip} onPress={() => onSelect(tomorrow, t)}>
+                      <Text style={S.slotChipText}>{t}</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              </>
+            )}
+            {todaySlots.length === 0 && tomorrowSlots.length === 0 && (
+              <Text style={S.slotEmpty}>Нет доступных слотов на ближайшие 2 дня</Text>
+            )}
+            <Pressable style={S.otherTimeBtn} onPress={onOtherTime}>
+              <Ionicons name="calendar-outline" size={16} color="#7B61FF" />
+              <Text style={S.otherTimeTxt}>Другое время</Text>
+            </Pressable>
+            <View style={{ height: 24 }} />
+          </ScrollView>
+        )}
+      </Animated.View>
+    </Modal>
+  );
+}
+
 // ─── Master card ──────────────────────────────────────────────────────────────
 
-function MasterCard({ item, isFav, onFav, onPress }: {
+function MasterCard({ item, isFav, onFav, onPress, onQuickBook }: {
   item: SpecialistListItem;
   isFav: boolean;
   onFav: () => void;
   onPress: () => void;
+  onQuickBook: () => void;
 }) {
   const rColor = ratingColor(item.rating);
   const services = (item.top_services ?? (item.top_service ? [item.top_service] : [])).slice(0, 3);
+  const hasSlot = item.next_slot_datetime != null;
 
   return (
     <Pressable style={S.card} onPress={onPress}>
@@ -81,6 +213,21 @@ function MasterCard({ item, isFav, onFav, onPress }: {
         </View>
       )}
 
+      {/* Quick book footer */}
+      {hasSlot && (
+        <View style={S.qbFooter}>
+          <View style={S.qbSlotBadge}>
+            <Ionicons name="time-outline" size={12} color="#7B61FF" />
+            <Text style={S.qbSlotText}>
+              {fmtNextSlot(item.next_slot_datetime!)}
+            </Text>
+          </View>
+          <Pressable style={S.qbBtn} onPress={onQuickBook} hitSlop={8}>
+            <Text style={S.qbBtnText}>Записаться</Text>
+          </Pressable>
+        </View>
+      )}
+
       <View style={S.separator} />
     </Pressable>
   );
@@ -117,6 +264,15 @@ export default function HomeFeedScreen() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState('');
+
+  // Quick booking state
+  const [qbItem, setQbItem] = useState<SpecialistListItem | null>(null);
+  const [svcSheetVisible, setSvcSheetVisible] = useState(false);
+  const [slotSheetVisible, setSlotSheetVisible] = useState(false);
+  const [selectedSvc, setSelectedSvc] = useState<ServicePreview | null>(null);
+  const [todaySlots, setTodaySlots] = useState<string[]>([]);
+  const [tomorrowSlots, setTomorrowSlots] = useState<string[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   const isFirstLoad = useRef(true);
 
@@ -172,6 +328,107 @@ export default function HomeFeedScreen() {
     }
   };
 
+  // ── Quick booking logic ──────────────────────────────────────────────────────
+
+  const loadSlotsAndOpen = useCallback(async (item: SpecialistListItem, svc: ServicePreview) => {
+    setSelectedSvc(svc);
+    setLoadingSlots(true);
+    setSlotSheetVisible(true);
+    try {
+      const [ts, tms] = await Promise.all([
+        getSlots(item.id, svc.id, todayIso()).catch(() => [] as string[]),
+        getSlots(item.id, svc.id, tomorrowIso()).catch(() => [] as string[]),
+      ]);
+
+      // If exactly one slot total → navigate directly
+      const allSlots = [...ts.map(t => ({ date: todayIso(), time: t })), ...tms.map(t => ({ date: tomorrowIso(), time: t }))];
+      if (allSlots.length === 1) {
+        setSlotSheetVisible(false);
+        const { date, time } = allSlots[0];
+        router.push({
+          pathname: '/booking/summary',
+          params: {
+            specialist_id: item.id,
+            specialist_name: `${item.first_name} ${item.last_name}`,
+            service_id: svc.id,
+            service_name: svc.name,
+            service_price: String(svc.price),
+            service_duration: String(svc.duration_minutes),
+            date,
+            time,
+          },
+        } as any);
+        return;
+      }
+
+      setTodaySlots(ts);
+      setTomorrowSlots(tms);
+    } finally {
+      setLoadingSlots(false);
+    }
+  }, [router]);
+
+  const handleQuickBook = useCallback((item: SpecialistListItem) => {
+    setQbItem(item);
+    const svcs = item.services_preview ?? [];
+    if (svcs.length === 0) {
+      router.push(`/profile/${item.id}` as any);
+      return;
+    }
+    if (svcs.length === 1) {
+      loadSlotsAndOpen(item, svcs[0]);
+      return;
+    }
+    setSvcSheetVisible(true);
+  }, [router, loadSlotsAndOpen]);
+
+  const handleServiceSelect = useCallback((svc: ServicePreview) => {
+    setSvcSheetVisible(false);
+    if (!qbItem) return;
+    loadSlotsAndOpen(qbItem, svc);
+  }, [qbItem, loadSlotsAndOpen]);
+
+  const handleSlotSelect = useCallback((date: string, time: string) => {
+    if (!qbItem || !selectedSvc) return;
+    setSlotSheetVisible(false);
+    router.push({
+      pathname: '/booking/summary',
+      params: {
+        specialist_id: qbItem.id,
+        specialist_name: `${qbItem.first_name} ${qbItem.last_name}`,
+        service_id: selectedSvc.id,
+        service_name: selectedSvc.name,
+        service_price: String(selectedSvc.price),
+        service_duration: String(selectedSvc.duration_minutes),
+        date,
+        time,
+      },
+    } as any);
+  }, [qbItem, selectedSvc, router]);
+
+  const handleOtherTime = useCallback(() => {
+    setSlotSheetVisible(false);
+    if (!qbItem || !selectedSvc) return;
+    router.push({
+      pathname: '/booking/slots',
+      params: {
+        specialist_id: qbItem.id,
+        specialist_name: `${qbItem.first_name} ${qbItem.last_name}`,
+        service_id: selectedSvc.id,
+        service_name: selectedSvc.name,
+        service_price: String(selectedSvc.price),
+        service_duration: String(selectedSvc.duration_minutes),
+      },
+    } as any);
+  }, [qbItem, selectedSvc, router]);
+
+  const closeSheets = useCallback(() => {
+    setSvcSheetVisible(false);
+    setSlotSheetVisible(false);
+  }, []);
+
+  // ── Render ───────────────────────────────────────────────────────────────────
+
   if (loading) {
     return (
       <View style={S.root}>
@@ -196,64 +453,86 @@ export default function HomeFeedScreen() {
     : items;
 
   return (
-    <FlatList
-      style={S.root}
-      data={filtered}
-      keyExtractor={i => i.id}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor="#1A1A1A" />
-      }
-      onEndReached={loadMore}
-      onEndReachedThreshold={0.3}
-      ListHeaderComponent={
-        <>
-          {/* Header с именем */}
-          <View style={S.header}>
-            <View style={S.userAvatar}>
-              <Text style={S.userAvatarText}>{userName[0] ?? '?'}</Text>
+    <>
+      <FlatList
+        style={S.root}
+        data={filtered}
+        keyExtractor={i => i.id}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor="#1A1A1A" />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.3}
+        ListHeaderComponent={
+          <>
+            {/* Header с именем */}
+            <View style={S.header}>
+              <View style={S.userAvatar}>
+                <Text style={S.userAvatarText}>{userName[0] ?? '?'}</Text>
+              </View>
+              <Text style={S.userName}>{userName || ' '}</Text>
             </View>
-            <Text style={S.userName}>{userName || ' '}</Text>
-          </View>
 
-          {/* Search bar */}
-          <View style={S.searchRow}>
-            <View style={S.searchBar}>
-              <TextInput
-                style={S.searchInput}
-                value={search}
-                onChangeText={setSearch}
-                placeholder="Поиск"
-                placeholderTextColor="#9CA3AF"
-                returnKeyType="search"
-              />
-              <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+            {/* Search bar */}
+            <View style={S.searchRow}>
+              <View style={S.searchBar}>
+                <TextInput
+                  style={S.searchInput}
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholder="Поиск"
+                  placeholderTextColor="#9CA3AF"
+                  returnKeyType="search"
+                />
+                <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+              </View>
+              <Pressable style={S.filterBtn}>
+                <Image
+                  source={require('../../assets/images/icon-filter.png')}
+                  style={{ width: 18, height: 18, tintColor: '#fff' }}
+                />
+              </Pressable>
             </View>
-            <Pressable style={S.filterBtn}>
-              <Image
-                source={require('../../assets/images/icon-filter.png')}
-                style={{ width: 18, height: 18, tintColor: '#fff' }}
-              />
-            </Pressable>
+          </>
+        }
+        ListEmptyComponent={
+          <View style={S.empty}>
+            <Text style={S.emptyTitle}>{search ? 'Ничего не найдено' : 'Мастеров пока нет'}</Text>
+            <Text style={S.emptySub}>{search ? 'Попробуйте другой запрос' : 'Попробуйте позже'}</Text>
           </View>
-        </>
-      }
-      ListEmptyComponent={
-        <View style={S.empty}>
-          <Text style={S.emptyTitle}>{search ? 'Ничего не найдено' : 'Мастеров пока нет'}</Text>
-          <Text style={S.emptySub}>{search ? 'Попробуйте другой запрос' : 'Попробуйте позже'}</Text>
-        </View>
-      }
-      ListFooterComponent={loadingMore ? <ActivityIndicator color="#1A1A1A" style={{ margin: 16 }} /> : null}
-      renderItem={({ item }) => (
-        <MasterCard
-          item={item}
-          isFav={favorites.has(item.id)}
-          onFav={() => handleFavorite(item.id)}
-          onPress={() => router.push(`/profile/${item.id}` as any)}
-        />
-      )}
-    />
+        }
+        ListFooterComponent={loadingMore ? <ActivityIndicator color="#1A1A1A" style={{ margin: 16 }} /> : null}
+        renderItem={({ item }) => (
+          <MasterCard
+            item={item}
+            isFav={favorites.has(item.id)}
+            onFav={() => handleFavorite(item.id)}
+            onPress={() => router.push(`/profile/${item.id}` as any)}
+            onQuickBook={() => handleQuickBook(item)}
+          />
+        )}
+      />
+
+      {/* Service selection sheet */}
+      <ServiceSheet
+        visible={svcSheetVisible}
+        services={qbItem?.services_preview ?? []}
+        onSelect={handleServiceSelect}
+        onClose={closeSheets}
+      />
+
+      {/* Slot selection sheet */}
+      <SlotSheet
+        visible={slotSheetVisible}
+        todaySlots={todaySlots}
+        tomorrowSlots={tomorrowSlots}
+        loading={loadingSlots}
+        onSelect={handleSlotSelect}
+        onOtherTime={handleOtherTime}
+        onClose={closeSheets}
+      />
+    </>
   );
 }
 
@@ -306,6 +585,20 @@ const S = StyleSheet.create({
   serviceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   serviceRowName: { fontSize: 13, color: '#4B5563', flex: 1, marginRight: 8 },
   serviceRowPrice: { fontSize: 13, fontWeight: '600', color: '#1A1A1A', flexShrink: 0 },
+
+  // Quick book footer
+  qbFooter: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  qbSlotBadge: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  qbSlotText: { fontSize: 12, color: '#7B61FF', fontWeight: '500' },
+  qbBtn: {
+    backgroundColor: '#7B61FF', borderRadius: 20,
+    paddingHorizontal: 14, paddingVertical: 6,
+  },
+  qbBtnText: { fontSize: 13, fontWeight: '700', color: '#fff' },
+
   separator: { height: 1, backgroundColor: '#F0F0F0', marginTop: 14 },
 
   // Skeleton
@@ -316,4 +609,48 @@ const S = StyleSheet.create({
   empty: { alignItems: 'center', paddingTop: 80, gap: 8 },
   emptyTitle: { fontSize: 17, fontWeight: '600', color: '#1A1A1A' },
   emptySub: { fontSize: 14, color: '#9CA3AF' },
+
+  // Sheets
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+  },
+  sheet: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    paddingTop: 12, paddingHorizontal: 16,
+    maxHeight: SCREEN_H * 0.75,
+  },
+  slotSheet: { maxHeight: SCREEN_H * 0.65 },
+  sheetHandle: {
+    alignSelf: 'center', width: 40, height: 4,
+    borderRadius: 2, backgroundColor: '#E5E5E5', marginBottom: 16,
+  },
+  sheetTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A1A', marginBottom: 16 },
+
+  // Service sheet items
+  svcItem: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+  },
+  svcName: { fontSize: 15, fontWeight: '600', color: '#1A1A1A', marginBottom: 2 },
+  svcMeta: { fontSize: 13, color: '#9CA3AF' },
+  svcPrice: { fontSize: 15, fontWeight: '700', color: '#1A1A1A' },
+
+  // Slot sheet
+  slotLoading: { paddingVertical: 40, alignItems: 'center' },
+  slotDayLabel: { fontSize: 13, fontWeight: '600', color: '#9CA3AF', marginTop: 8, marginBottom: 8 },
+  slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  slotChip: {
+    paddingHorizontal: 16, paddingVertical: 9,
+    borderRadius: 10, borderWidth: 1.5, borderColor: '#E5E5E5', backgroundColor: '#fff',
+  },
+  slotChipText: { fontSize: 14, fontWeight: '600', color: '#1A1A1A' },
+  slotEmpty: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', paddingVertical: 24 },
+  otherTimeBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 6, marginTop: 16, paddingVertical: 12,
+    borderRadius: 12, borderWidth: 1.5, borderColor: '#7B61FF',
+  },
+  otherTimeTxt: { fontSize: 14, fontWeight: '600', color: '#7B61FF' },
 });

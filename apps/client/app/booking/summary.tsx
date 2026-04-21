@@ -60,7 +60,7 @@ export default function BookingSummaryScreen() {
         },
       );
       router.replace({
-        pathname: '/booking/confirmation',
+        pathname: '/payment',
         params: {
           booking_id: booking.id,
           specialist_name: params.specialist_name,

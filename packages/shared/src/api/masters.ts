@@ -3,6 +3,13 @@ import { IS_MOCK } from './mock';
 
 // ─── Specialists feed ─────────────────────────────────────────────────────────
 
+export interface ServicePreview {
+  id: string;
+  name: string;
+  price: number;
+  duration_minutes: number;
+}
+
 export interface SpecialistListItem {
   id: string;
   first_name: string;
@@ -22,6 +29,10 @@ export interface SpecialistListItem {
     duration_minutes: number;
   }>;
   is_favorited?: boolean;
+  /** ISO UTC datetime ближайшего свободного слота, null — нет слотов */
+  next_slot_datetime?: string | null;
+  /** Услуги для быстрой записи (top 3) */
+  services_preview?: ServicePreview[];
 }
 
 export interface SpecialistsPage {
@@ -39,6 +50,12 @@ const mockSpecialists: SpecialistListItem[] = [
       { name: 'Маникюр классический', price: 1200, duration_minutes: 60 },
       { name: 'Педикюр', price: 1500, duration_minutes: 75 },
     ],
+    next_slot_datetime: (() => { const d = new Date(); d.setHours(18, 0, 0, 0); return d.toISOString(); })(),
+    services_preview: [
+      { id: 's1', name: 'Маникюр с гель-лаком', price: 1800, duration_minutes: 90 },
+      { id: 's2', name: 'Маникюр классический', price: 1200, duration_minutes: 60 },
+      { id: 's3', name: 'Педикюр', price: 1500, duration_minutes: 75 },
+    ],
   },
   {
     id: '2', first_name: 'Ольга', last_name: 'Смирнова', rating: 4.9, reviews_count: 87, distance_km: 1.2,
@@ -47,6 +64,10 @@ const mockSpecialists: SpecialistListItem[] = [
       { name: 'Массаж спины', price: 2500, duration_minutes: 60 },
       { name: 'Массаж шеи и плеч', price: 1500, duration_minutes: 40 },
       { name: 'Массаж всего тела', price: 4000, duration_minutes: 90 },
+    ],
+    next_slot_datetime: (() => { const d = new Date(); d.setHours(14, 0, 0, 0); return d.toISOString(); })(),
+    services_preview: [
+      { id: 's4', name: 'Массаж спины', price: 2500, duration_minutes: 60 },
     ],
   },
   {
@@ -57,6 +78,11 @@ const mockSpecialists: SpecialistListItem[] = [
       { name: 'Окрашивание', price: 3500, duration_minutes: 120 },
       { name: 'Ламинирование волос', price: 2000, duration_minutes: 90 },
     ],
+    next_slot_datetime: null, // нет слотов сегодня
+    services_preview: [
+      { id: 's5', name: 'Стрижка и укладка', price: 1500, duration_minutes: 75 },
+      { id: 's6', name: 'Окрашивание', price: 3500, duration_minutes: 120 },
+    ],
   },
   {
     id: '4', first_name: 'Елена', last_name: 'Козлова', rating: 5.0, reviews_count: 210, distance_km: 0.5,
@@ -65,6 +91,12 @@ const mockSpecialists: SpecialistListItem[] = [
       { name: 'Коррекция бровей', price: 800, duration_minutes: 45 },
       { name: 'Ламинирование бровей', price: 1400, duration_minutes: 60 },
       { name: 'Перманентный макияж', price: 5000, duration_minutes: 120 },
+    ],
+    next_slot_datetime: (() => { const d = new Date(); d.setHours(16, 30, 0, 0); return d.toISOString(); })(),
+    services_preview: [
+      { id: 's7', name: 'Коррекция бровей', price: 800, duration_minutes: 45 },
+      { id: 's8', name: 'Ламинирование бровей', price: 1400, duration_minutes: 60 },
+      { id: 's9', name: 'Перманентный макияж', price: 5000, duration_minutes: 120 },
     ],
   },
   {
@@ -75,6 +107,11 @@ const mockSpecialists: SpecialistListItem[] = [
       { name: 'Наращивание ресниц', price: 2500, duration_minutes: 120 },
       { name: 'Биозавивка ресниц', price: 1800, duration_minutes: 90 },
     ],
+    next_slot_datetime: (() => { const d = new Date(); d.setHours(11, 0, 0, 0); return d.toISOString(); })(),
+    services_preview: [
+      { id: 's10', name: 'Ламинирование ресниц', price: 1200, duration_minutes: 60 },
+      { id: 's11', name: 'Наращивание ресниц', price: 2500, duration_minutes: 120 },
+    ],
   },
   {
     id: '6', first_name: 'Светлана', last_name: 'Новикова', rating: 4.8, reviews_count: 99, distance_km: 1.7,
@@ -83,6 +120,10 @@ const mockSpecialists: SpecialistListItem[] = [
       { name: 'Педикюр с покрытием', price: 1600, duration_minutes: 80 },
       { name: 'Аппаратный педикюр', price: 2200, duration_minutes: 90 },
       { name: 'СПА-педикюр', price: 2800, duration_minutes: 100 },
+    ],
+    next_slot_datetime: null,
+    services_preview: [
+      { id: 's12', name: 'Педикюр с покрытием', price: 1600, duration_minutes: 80 },
     ],
   },
   {
@@ -93,6 +134,11 @@ const mockSpecialists: SpecialistListItem[] = [
       { name: 'Шугаринг', price: 1100, duration_minutes: 45 },
       { name: 'Лазерная эпиляция', price: 2000, duration_minutes: 30 },
     ],
+    next_slot_datetime: (() => { const d = new Date(); d.setHours(15, 0, 0, 0); return d.toISOString(); })(),
+    services_preview: [
+      { id: 's13', name: 'Восковая депиляция', price: 900, duration_minutes: 40 },
+      { id: 's14', name: 'Шугаринг', price: 1100, duration_minutes: 45 },
+    ],
   },
   {
     id: '8', first_name: 'Дарья', last_name: 'Федорова', rating: 4.9, reviews_count: 175, distance_km: 0.9,
@@ -101,6 +147,11 @@ const mockSpecialists: SpecialistListItem[] = [
       { name: 'Макияж дневной', price: 2000, duration_minutes: 60 },
       { name: 'Макияж вечерний', price: 3500, duration_minutes: 90 },
       { name: 'Свадебный макияж', price: 6000, duration_minutes: 120 },
+    ],
+    next_slot_datetime: (() => { const d = new Date(); d.setHours(13, 0, 0, 0); return d.toISOString(); })(),
+    services_preview: [
+      { id: 's15', name: 'Макияж дневной', price: 2000, duration_minutes: 60 },
+      { id: 's16', name: 'Макияж вечерний', price: 3500, duration_minutes: 90 },
     ],
   },
 ];
