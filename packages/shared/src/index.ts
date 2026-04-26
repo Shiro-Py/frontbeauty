@@ -22,8 +22,8 @@ export type { AuthStatus } from './auth/authStore';
 export { useVKAuth, useGoogleAuth, useAppleAuth, useYandexAuth } from './auth/socialAuth';
 
 // Masters
-export { getMasterDetail, getMasterServices, getMasterReviews, toggleFavorite, removeFavorite, getFavorites, getSpecialists, isMasterFavorited } from './api/masters';
-export type { MasterDetail, MasterService, MasterReview, SpecialistListItem, SpecialistsPage, ReviewsResponse, ServicePreview } from './api/masters';
+export { getMasterDetail, getMasterServices, getMasterReviews, toggleFavorite, removeFavorite, getFavorites, getSpecialists, getCategories, isMasterFavorited } from './api/masters';
+export type { MasterDetail, MasterService, MasterReview, SpecialistListItem, SpecialistsPage, ReviewsResponse, ServicePreview, Category, SpecialistsFilters } from './api/masters';
 
 // Services CRUD
 export { getServices, addService, updateService, deleteService } from './api/services';

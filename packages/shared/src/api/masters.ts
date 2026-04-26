@@ -10,6 +10,12 @@ export interface ServicePreview {
   duration_minutes: number;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  icon?: string;
+}
+
 export interface SpecialistListItem {
   id: string;
   first_name: string;
@@ -18,6 +24,7 @@ export interface SpecialistListItem {
   rating: number;
   reviews_count: number;
   distance_km?: number;
+  category?: string;
   top_service?: {
     name: string;
     price: number;
@@ -41,9 +48,30 @@ export interface SpecialistsPage {
   next: string | null;
 }
 
+export interface SpecialistsFilters {
+  category?: string;
+  price_min?: number;
+  price_max?: number;
+  rating_min?: number;
+  distance_km?: number;
+  date?: string;
+  time_of_day?: 'morning' | 'afternoon' | 'evening';
+  sort?: string;
+}
+
+const mockCategories: Category[] = [
+  { id: 'nails',    name: 'Ногти',             icon: '💅' },
+  { id: 'hair',     name: 'Волосы',             icon: '✂️' },
+  { id: 'massage',  name: 'Массаж',             icon: '💆' },
+  { id: 'brows',    name: 'Брови и ресницы',    icon: '👁️' },
+  { id: 'epil',     name: 'Депиляция',          icon: '🪒' },
+  { id: 'makeup',   name: 'Макияж',             icon: '💄' },
+  { id: 'skincare', name: 'Уход за кожей',      icon: '🧴' },
+];
+
 const mockSpecialists: SpecialistListItem[] = [
   {
-    id: '1', first_name: 'Мария', last_name: 'Иванова', rating: 4.8, reviews_count: 134, distance_km: 0.8,
+    id: '1', first_name: 'Мария', last_name: 'Иванова', rating: 4.8, reviews_count: 134, distance_km: 0.8, category: 'nails',
     top_service: { name: 'Маникюр с гель-лаком', price: 1800, duration_minutes: 90 },
     top_services: [
       { name: 'Маникюр с гель-лаком', price: 1800, duration_minutes: 90 },
@@ -58,7 +86,7 @@ const mockSpecialists: SpecialistListItem[] = [
     ],
   },
   {
-    id: '2', first_name: 'Ольга', last_name: 'Смирнова', rating: 4.9, reviews_count: 87, distance_km: 1.2,
+    id: '2', first_name: 'Ольга', last_name: 'Смирнова', rating: 4.9, reviews_count: 87, distance_km: 1.2, category: 'massage',
     top_service: { name: 'Массаж спины', price: 2500, duration_minutes: 60 },
     top_services: [
       { name: 'Массаж спины', price: 2500, duration_minutes: 60 },
@@ -71,7 +99,7 @@ const mockSpecialists: SpecialistListItem[] = [
     ],
   },
   {
-    id: '3', first_name: 'Анна', last_name: 'Петрова', rating: 4.7, reviews_count: 52, distance_km: 2.1,
+    id: '3', first_name: 'Анна', last_name: 'Петрова', rating: 4.7, reviews_count: 52, distance_km: 2.1, category: 'hair',
     top_service: { name: 'Стрижка и укладка', price: 1500, duration_minutes: 75 },
     top_services: [
       { name: 'Стрижка и укладка', price: 1500, duration_minutes: 75 },
@@ -85,7 +113,7 @@ const mockSpecialists: SpecialistListItem[] = [
     ],
   },
   {
-    id: '4', first_name: 'Елена', last_name: 'Козлова', rating: 5.0, reviews_count: 210, distance_km: 0.5,
+    id: '4', first_name: 'Елена', last_name: 'Козлова', rating: 5.0, reviews_count: 210, distance_km: 0.5, category: 'brows',
     top_service: { name: 'Коррекция бровей', price: 800, duration_minutes: 45 },
     top_services: [
       { name: 'Коррекция бровей', price: 800, duration_minutes: 45 },
@@ -100,7 +128,7 @@ const mockSpecialists: SpecialistListItem[] = [
     ],
   },
   {
-    id: '5', first_name: 'Наталья', last_name: 'Морозова', rating: 4.6, reviews_count: 63, distance_km: 3.4,
+    id: '5', first_name: 'Наталья', last_name: 'Морозова', rating: 4.6, reviews_count: 63, distance_km: 3.4, category: 'brows',
     top_service: { name: 'Ламинирование ресниц', price: 1200, duration_minutes: 60 },
     top_services: [
       { name: 'Ламинирование ресниц', price: 1200, duration_minutes: 60 },
@@ -114,7 +142,7 @@ const mockSpecialists: SpecialistListItem[] = [
     ],
   },
   {
-    id: '6', first_name: 'Светлана', last_name: 'Новикова', rating: 4.8, reviews_count: 99, distance_km: 1.7,
+    id: '6', first_name: 'Светлана', last_name: 'Новикова', rating: 4.8, reviews_count: 99, distance_km: 1.7, category: 'nails',
     top_service: { name: 'Педикюр с покрытием', price: 1600, duration_minutes: 80 },
     top_services: [
       { name: 'Педикюр с покрытием', price: 1600, duration_minutes: 80 },
@@ -127,7 +155,7 @@ const mockSpecialists: SpecialistListItem[] = [
     ],
   },
   {
-    id: '7', first_name: 'Татьяна', last_name: 'Соколова', rating: 4.5, reviews_count: 41, distance_km: 4.0,
+    id: '7', first_name: 'Татьяна', last_name: 'Соколова', rating: 4.5, reviews_count: 41, distance_km: 4.0, category: 'epil',
     top_service: { name: 'Восковая депиляция', price: 900, duration_minutes: 40 },
     top_services: [
       { name: 'Восковая депиляция', price: 900, duration_minutes: 40 },
@@ -141,7 +169,7 @@ const mockSpecialists: SpecialistListItem[] = [
     ],
   },
   {
-    id: '8', first_name: 'Дарья', last_name: 'Федорова', rating: 4.9, reviews_count: 175, distance_km: 0.9,
+    id: '8', first_name: 'Дарья', last_name: 'Федорова', rating: 4.9, reviews_count: 175, distance_km: 0.9, category: 'makeup',
     top_service: { name: 'Макияж дневной', price: 2000, duration_minutes: 60 },
     top_services: [
       { name: 'Макияж дневной', price: 2000, duration_minutes: 60 },
@@ -156,17 +184,76 @@ const mockSpecialists: SpecialistListItem[] = [
   },
 ];
 
-export const getSpecialists = async (page = 1, pageSize = 10): Promise<SpecialistsPage> => {
+export const getSpecialists = async (
+  page = 1,
+  pageSize = 10,
+  filters?: SpecialistsFilters,
+): Promise<SpecialistsPage> => {
   if (IS_MOCK) {
-    const start = (page - 1) * pageSize;
-    const results = mockSpecialists.slice(start, start + pageSize).map(s => ({
+    let results = mockSpecialists.map(s => ({
       ...s,
       is_favorited: mockFavoritesStore.has(s.id),
     }));
-    return { results, count: mockSpecialists.length, next: start + pageSize < mockSpecialists.length ? 'next' : null };
+
+    if (filters?.category) {
+      results = results.filter(s => s.category === filters.category);
+    }
+    if (filters?.price_min) {
+      results = results.filter(s => (s.top_service?.price ?? 0) >= filters.price_min!);
+    }
+    if (filters?.price_max) {
+      results = results.filter(s => (s.top_service?.price ?? Infinity) <= filters.price_max!);
+    }
+    if (filters?.rating_min) {
+      results = results.filter(s => s.rating >= filters.rating_min!);
+    }
+    if (filters?.distance_km) {
+      results = results.filter(s => (s.distance_km ?? Infinity) <= filters.distance_km!);
+    }
+    if (filters?.date) {
+      results = results.filter(s => s.next_slot_datetime != null);
+    }
+
+    if (filters?.sort === 'rating') {
+      results = [...results].sort((a, b) => b.rating - a.rating);
+    } else if (filters?.sort === 'distance') {
+      results = [...results].sort((a, b) => (a.distance_km ?? 99) - (b.distance_km ?? 99));
+    } else if (filters?.sort === 'price_asc') {
+      results = [...results].sort((a, b) => (a.top_service?.price ?? 0) - (b.top_service?.price ?? 0));
+    } else if (filters?.sort === 'price_desc') {
+      results = [...results].sort((a, b) => (b.top_service?.price ?? 0) - (a.top_service?.price ?? 0));
+    } else if (filters?.sort === 'next_slot') {
+      results = [...results].sort((a, b) => {
+        if (!a.next_slot_datetime) return 1;
+        if (!b.next_slot_datetime) return -1;
+        return a.next_slot_datetime.localeCompare(b.next_slot_datetime);
+      });
+    }
+
+    const count = results.length;
+    const start = (page - 1) * pageSize;
+    const pageResults = results.slice(start, start + pageSize);
+    return { results: pageResults, count, next: start + pageSize < count ? 'next' : null };
   }
+
   const api = getApiClient();
-  const { data } = await api.get<SpecialistsPage>(`/specialists/?page=${page}&page_size=${pageSize}`);
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (filters?.category)    params.set('category', filters.category);
+  if (filters?.price_min)   params.set('price_min', String(filters.price_min));
+  if (filters?.price_max)   params.set('price_max', String(filters.price_max));
+  if (filters?.rating_min)  params.set('rating_min', String(filters.rating_min));
+  if (filters?.distance_km) params.set('distance_km', String(filters.distance_km));
+  if (filters?.date)        params.set('date', filters.date);
+  if (filters?.time_of_day) params.set('time_of_day', filters.time_of_day);
+  if (filters?.sort)        params.set('sort', filters.sort);
+  const { data } = await api.get<SpecialistsPage>(`/specialists/?${params}`);
+  return data;
+};
+
+export const getCategories = async (): Promise<Category[]> => {
+  if (IS_MOCK) return [...mockCategories];
+  const api = getApiClient();
+  const { data } = await api.get<Category[]>('/categories/');
   return data;
 };
 
