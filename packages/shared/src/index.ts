@@ -29,6 +29,10 @@ export type { MasterDetail, MasterService, MasterReview, SpecialistListItem, Spe
 export { getServices, addService, updateService, deleteService } from './api/services';
 export type { Service, ServiceCreateData, ServiceUpdateData } from './api/services';
 
+// AI Chat
+export { sendChatMessage } from './api/ai';
+export type { ChatMessage, ActionData, AIChatSpecialist, SlotDate } from './api/ai';
+
 // Payments
 export { createPayment, getPaymentStatus, getSavedCards, deleteSavedCard, getPaymentHistory } from './api/payments';
 export type { SavedCard, PaymentStatus, PaymentResult, PaymentHistoryItem } from './api/payments';

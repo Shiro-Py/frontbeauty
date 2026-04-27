@@ -43,7 +43,7 @@ export default function TabLayout() {
               onPress={props.onPress ?? undefined}
             >
               <View style={S.centerCircle}>
-                <Ionicons name="cut-outline" size={24} color="#fff" />
+                <Ionicons name="sparkles" size={22} color="#fff" />
               </View>
             </Pressable>
           ),
