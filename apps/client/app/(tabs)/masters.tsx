@@ -8,8 +8,8 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import {
   getSpecialists, toggleFavorite, removeFavorite,
-  getMe, getSlots, getCategories,
-  SpecialistListItem, ServicePreview, Category, SpecialistsFilters,
+  getMe, getSlots, getCategories, getUpcomingAppointments,
+  SpecialistListItem, ServicePreview, Category, SpecialistsFilters, Booking,
 } from '@ayla/shared';
 import FilterSheet, {
   CatalogFilters, DEFAULT_FILTERS, countActiveFilters,
@@ -32,6 +32,14 @@ function ratingColor(rating: number): string {
   if (rating >= 3) return '#F59E0B';
   return '#E53935';
 }
+function fmtBookingDate(date: string, time: string): string {
+  const d = new Date(`${date}T${time}`);
+  const today = new Date();
+  const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1);
+  if (date === todayIso()) return `Сегодня, ${time}`;
+  if (date === tomorrowIso()) return `Завтра, ${time}`;
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ', ' + time;
+}
 
 function toApiFilters(f: CatalogFilters, sort: SortOption): SpecialistsFilters {
   return {
@@ -44,6 +52,64 @@ function toApiFilters(f: CatalogFilters, sort: SortOption): SpecialistsFilters {
     time_of_day: f.time_of_day || undefined,
     sort:        sort !== 'recommended' ? sort : undefined,
   };
+}
+
+// ─── AI Entry Point ────────────────────────────────────────────────────────────
+
+function AIEntryCard({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable style={S.aiCard} onPress={onPress}>
+      <View style={S.aiCardLeft}>
+        <View style={S.aiIcon}>
+          <Ionicons name="sparkles" size={20} color="#fff" />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={S.aiCardTitle}>Ayla AI-ассистент</Text>
+          <Text style={S.aiCardSub}>Найду мастера под ваш запрос</Text>
+        </View>
+      </View>
+      <View style={S.aiArrow}>
+        <Ionicons name="chevron-forward" size={18} color="#7B61FF" />
+      </View>
+    </Pressable>
+  );
+}
+
+// ─── Upcoming appointment card ─────────────────────────────────────────────────
+
+function AppointmentCard({ item, onPress }: { item: Booking; onPress: () => void }) {
+  const statusColor: Record<string, string> = {
+    confirmed: '#22C55E',
+    awaiting_payment: '#F59E0B',
+    pending: '#F59E0B',
+    in_progress: '#7B61FF',
+  };
+  const statusLabel: Record<string, string> = {
+    confirmed: 'Подтверждено',
+    awaiting_payment: 'Ожидает оплаты',
+    pending: 'Ожидание',
+    in_progress: 'В процессе',
+  };
+  const color = statusColor[item.status] ?? '#9CA3AF';
+  const label = statusLabel[item.status] ?? item.status;
+
+  return (
+    <Pressable style={S.apptCard} onPress={onPress}>
+      <View style={S.apptAvatar}>
+        {item.specialist_avatar ? (
+          <Image source={{ uri: item.specialist_avatar }} style={S.apptAvatarImg} />
+        ) : (
+          <Text style={S.apptAvatarText}>{item.specialist_name[0]}</Text>
+        )}
+      </View>
+      <Text style={S.apptName} numberOfLines={1}>{item.specialist_name}</Text>
+      <Text style={S.apptService} numberOfLines={1}>{item.service_name}</Text>
+      <Text style={S.apptDate}>{fmtBookingDate(item.date, item.time)}</Text>
+      <View style={[S.apptStatus, { borderColor: color }]}>
+        <Text style={[S.apptStatusText, { color }]}>{label}</Text>
+      </View>
+    </Pressable>
+  );
 }
 
 // ─── Service sheet ────────────────────────────────────────────────────────────
@@ -245,7 +311,7 @@ function Skeleton() {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function HomeFeedScreen() {
+export default function HomeScreen() {
   const router = useRouter();
 
   const [userName, setUserName] = useState('');
@@ -257,9 +323,10 @@ export default function HomeFeedScreen() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [search, setSearch] = useState('');
+  const [upcomingAppts, setUpcomingAppts] = useState<Booking[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   // Filters & sort
-  const [categories, setCategories] = useState<Category[]>([]);
   const [filters, setFilters] = useState<CatalogFilters>(DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortOption>('recommended');
   const [filterSheetVisible, setFilterSheetVisible] = useState(false);
@@ -283,11 +350,20 @@ export default function HomeFeedScreen() {
       setUserName(name || u.phone);
     }).catch(() => {});
     getCategories().then(setCategories).catch(() => {});
+    getUpcomingAppointments().then(res => {
+      const list = Array.isArray(res) ? res : (res as any).results ?? [];
+      setUpcomingAppts(list.slice(0, 5));
+    }).catch(() => {});
   }, []);
 
   const load = useCallback(async (isRefresh = false, f = filters, s = sort) => {
-    if (isRefresh) setRefreshing(true);
-    else if (isFirstLoad.current) setLoading(true);
+    if (isRefresh) {
+      setRefreshing(true);
+      getUpcomingAppointments().then(res => {
+        const list = Array.isArray(res) ? res : (res as any).results ?? [];
+        setUpcomingAppts(list.slice(0, 5));
+      }).catch(() => {});
+    } else if (isFirstLoad.current) setLoading(true);
     try {
       const data = await getSpecialists(1, PAGE_SIZE, toApiFilters(f, s));
       setItems(data.results);
@@ -440,8 +516,8 @@ export default function HomeFeedScreen() {
         <View style={S.header}>
           <View style={[S.skeletonLine, { width: 120, height: 16 }]} />
         </View>
-        <View style={S.searchBar}>
-          <View style={[S.skeletonLine, { flex: 1, height: 18 }]} />
+        <View style={{ marginHorizontal: 16, marginBottom: 16 }}>
+          <View style={[S.skeletonLine, { height: 68, borderRadius: 16 }]} />
         </View>
         {[1, 2, 3].map(i => <Skeleton key={i} />)}
       </View>
@@ -471,28 +547,99 @@ export default function HomeFeedScreen() {
         onEndReachedThreshold={0.3}
         ListHeaderComponent={
           <>
+            {/* Greeting */}
             <View style={S.header}>
               <View style={S.userAvatar}>
                 <Text style={S.userAvatarText}>{userName[0] ?? '?'}</Text>
               </View>
-              <Text style={S.userName}>{userName || ' '}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={S.greetLabel}>Добро пожаловать</Text>
+                <Text style={S.userName}>{userName || ' '}</Text>
+              </View>
             </View>
 
+            {/* AI Entry Point */}
+            <View style={{ paddingHorizontal: 16, marginBottom: 16 }}>
+              <AIEntryCard onPress={() => router.push('/(tabs)/center' as any)} />
+            </View>
+
+            {/* Upcoming appointments */}
+            {upcomingAppts.length > 0 && (
+              <View style={S.section}>
+                <View style={S.sectionHeader}>
+                  <Text style={S.sectionTitle}>Ближайшие записи</Text>
+                  <Pressable onPress={() => router.push('/(tabs)/booking' as any)}>
+                    <Text style={S.sectionLink}>Все</Text>
+                  </Pressable>
+                </View>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={S.apptScroll}
+                >
+                  {upcomingAppts.map(appt => (
+                    <AppointmentCard
+                      key={appt.id}
+                      item={appt}
+                      onPress={() => router.push('/(tabs)/booking' as any)}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Popular categories */}
+            {categories.length > 0 && (
+              <View style={S.section}>
+                <Text style={S.sectionTitle}>Категории</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={S.catScroll}
+                >
+                  {categories.map(cat => (
+                    <Pressable
+                      key={cat.id}
+                      style={[
+                        S.catChip,
+                        filters.category === cat.id && S.catChipActive,
+                      ]}
+                      onPress={() => {
+                        const newCat = filters.category === cat.id ? '' : cat.id;
+                        const newFilters = { ...filters, category: newCat };
+                        handleApplyFilters(newFilters);
+                      }}
+                    >
+                      {cat.icon && <Text style={S.catIcon}>{cat.icon}</Text>}
+                      <Text style={[
+                        S.catChipText,
+                        filters.category === cat.id && S.catChipTextActive,
+                      ]}>
+                        {cat.name}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
             {/* Search + filter/sort toolbar */}
+            <View style={S.sectionTitle2Row}>
+              <Text style={S.sectionTitle}>Мастера рядом</Text>
+            </View>
             <View style={S.toolbarRow}>
               <View style={S.searchBar}>
                 <TextInput
                   style={S.searchInput}
                   value={search}
                   onChangeText={setSearch}
-                  placeholder="Поиск"
+                  placeholder="Поиск мастера или услуги"
                   placeholderTextColor="#9CA3AF"
                   returnKeyType="search"
                 />
                 <Ionicons name="search-outline" size={18} color="#9CA3AF" />
               </View>
 
-              {/* Filter button */}
               <Pressable style={S.toolBtn} onPress={() => setFilterSheetVisible(true)}>
                 <Ionicons name="options-outline" size={18} color="#fff" />
                 {activeFiltersCount > 0 && (
@@ -502,21 +649,16 @@ export default function HomeFeedScreen() {
                 )}
               </Pressable>
 
-              {/* Sort button */}
               <Pressable style={S.sortBtn} onPress={() => setSortSheetVisible(true)}>
                 <Ionicons name="swap-vertical-outline" size={16} color="#7B61FF" />
               </Pressable>
             </View>
 
-            {/* Active sort indicator */}
             {sort !== 'recommended' && (
               <View style={S.sortChipRow}>
                 <View style={S.sortChip}>
                   <Text style={S.sortChipText}>{sortLabel(sort)}</Text>
-                  <Pressable
-                    onPress={() => handleSelectSort('recommended')}
-                    hitSlop={6}
-                  >
+                  <Pressable onPress={() => handleSelectSort('recommended')} hitSlop={6}>
                     <Ionicons name="close-circle" size={14} color="#7B61FF" />
                   </Pressable>
                 </View>
@@ -534,10 +676,7 @@ export default function HomeFeedScreen() {
               {activeFiltersCount > 0 ? 'Попробуйте изменить фильтры' : 'Попробуйте позже'}
             </Text>
             {activeFiltersCount > 0 && (
-              <Pressable
-                style={S.resetFiltersBtn}
-                onPress={() => handleApplyFilters(DEFAULT_FILTERS)}
-              >
+              <Pressable style={S.resetFiltersBtn} onPress={() => handleApplyFilters(DEFAULT_FILTERS)}>
                 <Text style={S.resetFiltersBtnText}>Сбросить фильтры</Text>
               </Pressable>
             )}
@@ -593,17 +732,86 @@ export default function HomeFeedScreen() {
 const S = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#fff' },
 
+  // Header
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
-    paddingHorizontal: 16, paddingTop: 56, paddingBottom: 12,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: 16, paddingTop: 56, paddingBottom: 16,
   },
   userAvatar: {
-    width: 36, height: 36, borderRadius: 18, backgroundColor: '#E5E5E5',
+    width: 40, height: 40, borderRadius: 20, backgroundColor: '#E5E5E5',
     alignItems: 'center', justifyContent: 'center',
   },
-  userAvatarText: { fontSize: 14, fontWeight: '700', color: '#1A1A1A' },
-  userName: { fontSize: 16, fontWeight: '600', color: '#1A1A1A' },
+  userAvatarText: { fontSize: 15, fontWeight: '700', color: '#1A1A1A' },
+  greetLabel: { fontSize: 12, color: '#9CA3AF', marginBottom: 1 },
+  userName: { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
 
+  // AI entry card
+  aiCard: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#F5F2FF',
+    borderRadius: 16, paddingVertical: 14, paddingHorizontal: 16,
+    borderWidth: 1, borderColor: '#E8E0FF',
+  },
+  aiCardLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  aiIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#7B61FF', alignItems: 'center', justifyContent: 'center',
+  },
+  aiCardTitle: { fontSize: 15, fontWeight: '700', color: '#1A1A1A', marginBottom: 2 },
+  aiCardSub: { fontSize: 13, color: '#7B61FF' },
+  aiArrow: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#EDE8FF', alignItems: 'center', justifyContent: 'center',
+  },
+
+  // Sections
+  section: { marginBottom: 20 },
+  sectionHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, marginBottom: 12,
+  },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: '#1A1A1A', paddingHorizontal: 16, marginBottom: 10 },
+  sectionTitle2Row: { paddingHorizontal: 0, marginTop: 4, marginBottom: 0 },
+  sectionLink: { fontSize: 14, fontWeight: '600', color: '#7B61FF' },
+
+  // Appointment cards
+  apptScroll: { paddingHorizontal: 16, gap: 12 },
+  apptCard: {
+    width: 160, backgroundColor: '#fff',
+    borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: '#F0F0F0',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 3,
+  },
+  apptAvatar: {
+    width: 44, height: 44, borderRadius: 22,
+    backgroundColor: '#E5E5E5', alignItems: 'center', justifyContent: 'center', marginBottom: 10,
+  },
+  apptAvatarImg: { width: 44, height: 44, borderRadius: 22 },
+  apptAvatarText: { fontSize: 16, fontWeight: '700', color: '#1A1A1A' },
+  apptName: { fontSize: 13, fontWeight: '700', color: '#1A1A1A', marginBottom: 2 },
+  apptService: { fontSize: 12, color: '#6B7280', marginBottom: 6 },
+  apptDate: { fontSize: 11, color: '#9CA3AF', marginBottom: 8 },
+  apptStatus: {
+    alignSelf: 'flex-start', borderWidth: 1, borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  apptStatusText: { fontSize: 11, fontWeight: '600' },
+
+  // Categories
+  catScroll: { paddingHorizontal: 16, gap: 8 },
+  catChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 20, backgroundColor: '#F5F5F5',
+    borderWidth: 1.5, borderColor: 'transparent',
+  },
+  catChipActive: { backgroundColor: '#F0EDF8', borderColor: '#7B61FF' },
+  catIcon: { fontSize: 16 },
+  catChipText: { fontSize: 13, fontWeight: '500', color: '#4B5563' },
+  catChipTextActive: { color: '#7B61FF', fontWeight: '700' },
+
+  // Toolbar
   toolbarRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginHorizontal: 16, marginBottom: 6,
@@ -636,7 +844,7 @@ const S = StyleSheet.create({
   },
   sortChipText: { fontSize: 12, fontWeight: '600', color: '#7B61FF' },
 
-  // Card
+  // Master card
   card: { paddingHorizontal: 16, paddingTop: 14 },
   cardRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
   avatar: {
