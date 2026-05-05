@@ -5,8 +5,9 @@ import {
   KeyboardAvoidingView, Platform, Animated,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { getServices, addService, updateService, deleteService } from '@ayla/shared';
+import { getServices, addService, updateService, deleteService, createServiceFromTemplate, TemplateServiceCreate } from '@ayla/shared';
 import type { Service } from '@ayla/shared';
+import TemplatePickerSheet from '../../components/TemplatePickerSheet';
 
 // ─── Константы ────────────────────────────────────────────────────────────────
 
@@ -316,6 +317,7 @@ export default function ServicesScreen() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingService, setEditingService] = useState<Service | null>(null);
+  const [templateSheetVisible, setTemplateSheetVisible] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -330,7 +332,15 @@ export default function ServicesScreen() {
     }
   };
 
-  const openAdd = () => { setEditingService(null); setModalVisible(true); };
+  const openAddSheet = () => {
+    Alert.alert('Как добавить услугу?', undefined, [
+      { text: '📋 Выбрать из шаблонов', onPress: () => setTemplateSheetVisible(true) },
+      { text: '✏️ Ввести вручную', onPress: () => { setEditingService(null); setModalVisible(true); } },
+      { text: 'Отмена', style: 'cancel' },
+    ]);
+  };
+
+  const openAdd = () => openAddSheet();
   const openEdit = (s: Service) => { setEditingService(s); setModalVisible(true); };
 
   const handleSave = async (form: FormState) => {
@@ -378,6 +388,20 @@ export default function ServicesScreen() {
         },
       },
     ]);
+  };
+
+  const handleTemplatesSave = async (items: TemplateServiceCreate[]) => {
+    const maxOrder = services.reduce((m, s) => Math.max(m, s.sort_order), 0);
+    const created: Service[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      const svc = await createServiceFromTemplate(it);
+      // mock returns void; reload to get fresh list
+    }
+    setTemplateSheetVisible(false);
+    await load();
+    const n = items.length;
+    Alert.alert('', `Добавлено ${n} ${n === 1 ? 'услуга' : n < 5 ? 'услуги' : 'услуг'}`);
   };
 
   const moveService = async (index: number, direction: 'up' | 'down') => {
@@ -435,6 +459,13 @@ export default function ServicesScreen() {
         initial={editingService}
         onClose={() => setModalVisible(false)}
         onSave={handleSave}
+      />
+
+      <TemplatePickerSheet
+        visible={templateSheetVisible}
+        onClose={() => setTemplateSheetVisible(false)}
+        onSave={handleTemplatesSave}
+        existingNames={services.map(s => s.name)}
       />
     </View>
   );

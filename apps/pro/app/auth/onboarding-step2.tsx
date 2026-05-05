@@ -5,7 +5,8 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { useLocalSearchParams } from 'expo-router';
-import { createService, updateMasterProfile, useAuth, tokenStorage } from '@ayla/shared';
+import { createService, updateMasterProfile, useAuth, tokenStorage, createServiceFromTemplate, TemplateServiceCreate } from '@ayla/shared';
+import TemplatePickerSheet from '../../components/TemplatePickerSheet';
 
 const SERVICE_CATEGORIES = [
   { id: 'hair', label: 'Волосы' },
@@ -84,6 +85,7 @@ export default function OnboardingStep2Screen() {
   const [foundAddress, setFoundAddress] = useState<GeoResult | null>(null);
   const [searchingAddress, setSearchingAddress] = useState(false);
 
+  const [templateSheetVisible, setTemplateSheetVisible] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // --- Услуги ---
@@ -107,6 +109,18 @@ export default function OnboardingStep2Screen() {
 
   const removeService = (localId: string) => {
     setServices(prev => prev.filter(s => s.localId !== localId));
+  };
+
+  const handleTemplatesSave = async (items: TemplateServiceCreate[]) => {
+    const newItems: ServiceItem[] = items.map(it => ({
+      localId: `${Date.now()}_${Math.random()}`,
+      name: it.name,
+      price: String(it.price_min),
+      duration: String(it.duration_minutes),
+      category: it.category,
+    }));
+    setServices(prev => [...prev, ...newItems]);
+    setTemplateSheetVisible(false);
   };
 
   // --- Адрес ---
@@ -204,8 +218,18 @@ export default function OnboardingStep2Screen() {
       </View>
 
       {/* ===== УСЛУГИ ===== */}
-      <Text style={styles.sectionTitle}>Ваши услуги</Text>
-      <Text style={styles.sectionSubtitle}>Добавьте хотя бы одну услугу (макс. {MAX_SERVICES})</Text>
+      <Text style={styles.sectionTitle}>Добавьте услуги 💅</Text>
+      <Text style={styles.sectionSubtitle}>Выберите из популярных или добавьте свои (макс. {MAX_SERVICES})</Text>
+
+      {/* Шаблоны */}
+      <Pressable style={styles.templateBtn} onPress={() => setTemplateSheetVisible(true)}>
+        <Text style={styles.templateBtnEmoji}>📋</Text>
+        <View style={styles.templateBtnInfo}>
+          <Text style={styles.templateBtnTitle}>Выбрать из шаблонов</Text>
+          <Text style={styles.templateBtnDesc}>Популярные услуги с ценами региона</Text>
+        </View>
+        <Text style={styles.templateBtnArrow}>›</Text>
+      </Pressable>
 
       {/* Список добавленных услуг */}
       {services.map(svc => (
@@ -344,6 +368,12 @@ export default function OnboardingStep2Screen() {
         </Text>
       )}
     </ScrollView>
+
+    <TemplatePickerSheet
+      visible={templateSheetVisible}
+      onClose={() => setTemplateSheetVisible(false)}
+      onSave={handleTemplatesSave}
+    />
   );
 }
 
@@ -437,4 +467,14 @@ const styles = StyleSheet.create({
   finishButtonDisabled: { backgroundColor: '#9B92D0' },
   finishButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
   hintText: { textAlign: 'center', color: '#B0A8B9', fontSize: 13, marginTop: 10 },
+
+  templateBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#EDE8FF', borderRadius: 14, padding: 14, marginBottom: 16,
+  },
+  templateBtnEmoji: { fontSize: 24 },
+  templateBtnInfo: { flex: 1 },
+  templateBtnTitle: { fontSize: 15, fontWeight: '700', color: '#4A3DB0' },
+  templateBtnDesc: { fontSize: 12, color: '#7A7286', marginTop: 2 },
+  templateBtnArrow: { fontSize: 22, color: '#4A3DB0', fontWeight: '300' },
 });

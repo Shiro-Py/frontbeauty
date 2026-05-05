@@ -63,6 +63,10 @@ export { getAvatarData, createAvatar } from './api/avatar';
 // Portfolio (Pro)
 export { getPortfolio, uploadPortfolioPhoto, deletePortfolioPhoto } from './api/portfolio';
 export type { PortfolioPhoto } from './api/portfolio';
+
+// Service Templates (Pro)
+export { getTemplates, getRegions, createServiceFromTemplate } from './api/serviceTemplates';
+export type { ServiceTemplate, ServiceRegion, TemplateServiceCreate } from './api/serviceTemplates';
 export type { AvatarSnapshot, WeeklyStats, AvatarRecommendation, AvatarData, AvatarAnalysis } from './api/avatar';
 
 // Components
