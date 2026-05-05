@@ -119,7 +119,36 @@ function calcTotals(entries: DiaryEntry[]): NutrientData {
   );
 }
 
+export interface WaterData {
+  water_ml: number;
+  goal_ml: number;
+}
+
+let mockWaterStore: WaterData = { water_ml: 600, goal_ml: 2000 };
+
 // ─── API ──────────────────────────────────────────────────────────────────────
+
+export async function getWater(date: string): Promise<WaterData> {
+  if (IS_MOCK) {
+    await delay(150);
+    const today = new Date().toISOString().split('T')[0];
+    return date === today ? { ...mockWaterStore } : { water_ml: 0, goal_ml: 2000 };
+  }
+  const api = getApiClient();
+  const { data } = await api.get(`/nutrition/water/?date=${date}`);
+  return data;
+}
+
+export async function logWater(amount_ml: number): Promise<WaterData> {
+  if (IS_MOCK) {
+    await delay(150);
+    mockWaterStore = { ...mockWaterStore, water_ml: Math.max(0, mockWaterStore.water_ml + amount_ml) };
+    return { ...mockWaterStore };
+  }
+  const api = getApiClient();
+  const { data } = await api.post('/nutrition/water/', { amount_ml });
+  return data;
+}
 
 export async function getDiary(date: string): Promise<DiarySummary> {
   if (IS_MOCK) {

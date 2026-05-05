@@ -54,8 +54,8 @@ export type { PermissionResult, NotificationAppType, NotificationType, Notificat
 export type { SlotsResponse, BookingCreate, Booking, BookingStatus, AppointmentsPage, AppointmentWithDetails, ProAppointment, ProAppointmentsPage, ProAppointmentFilter } from './api/bookings';
 
 // Nutrition
-export { getDiary, scanFood, logFood, deleteLog, getInsights } from './api/nutrition';
-export type { NutrientData, FoodScanResult, DiaryEntry, DiarySummary, VitaminInsight, WeeklyInsights } from './api/nutrition';
+export { getDiary, scanFood, logFood, deleteLog, getInsights, getWater, logWater } from './api/nutrition';
+export type { NutrientData, FoodScanResult, DiaryEntry, DiarySummary, VitaminInsight, WeeklyInsights, WaterData } from './api/nutrition';
 
 // Components
 export { default as MasterPreviewCard } from './components/MasterPreviewCard';

@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View, Text, StyleSheet, FlatList, Pressable,
-  ActivityIndicator, RefreshControl, Alert,
+  ActivityIndicator, RefreshControl, Alert, Animated,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getDiary, deleteLog, DiarySummary, DiaryEntry, NutrientData } from '@ayla/shared';
+import { getDiary, deleteLog, getWater, logWater, DiarySummary, DiaryEntry, NutrientData, WaterData } from '@ayla/shared';
 
 function todayIso() { return new Date().toISOString().split('T')[0]; }
 function addDays(iso: string, n: number) {
@@ -109,6 +109,82 @@ function EntryRow({ item, onDelete }: { item: DiaryEntry; onDelete: () => void }
   );
 }
 
+// ─── Water block ──────────────────────────────────────────────────────────────
+
+const WATER_PORTIONS = [200, 350, 500];
+
+function WaterBlock({ water, onAdd, onUndo }: {
+  water: WaterData;
+  onAdd: (ml: number) => void;
+  onUndo: () => void;
+}) {
+  const pct = Math.min(water.water_ml / water.goal_ml, 1);
+  const done = water.water_ml >= water.goal_ml;
+  const glasses = Math.round(water.water_ml / 200);
+  const goalGlasses = Math.round(water.goal_ml / 200);
+
+  const animWidth = useRef(new Animated.Value(pct)).current;
+
+  useEffect(() => {
+    Animated.timing(animWidth, {
+      toValue: pct,
+      duration: 350,
+      useNativeDriver: false,
+    }).start();
+  }, [pct]);
+
+  const barColor = done ? '#7B61FF' : '#38BDF8';
+
+  return (
+    <View style={SW.block}>
+      <View style={SW.header}>
+        <View style={SW.titleRow}>
+          <Text style={SW.dropIcon}>💧</Text>
+          <Text style={SW.title}>Вода</Text>
+          {done && <Ionicons name="checkmark-circle" size={16} color="#7B61FF" style={{ marginLeft: 4 }} />}
+        </View>
+        <Text style={SW.counter}>
+          {water.water_ml} / {water.goal_ml} мл
+          <Text style={SW.glasses}>  ({glasses}/{goalGlasses} ст.)</Text>
+        </Text>
+      </View>
+
+      {/* Progress bar */}
+      <View style={SW.track}>
+        <Animated.View style={[
+          SW.fill,
+          {
+            width: animWidth.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+            backgroundColor: barColor,
+          },
+        ]} />
+      </View>
+
+      {done
+        ? <Text style={SW.doneText}>Норма выполнена 🎉</Text>
+        : water.water_ml === 0
+          ? <Text style={SW.emptyText}>Выпей первый стакан воды</Text>
+          : null}
+
+      {/* Buttons */}
+      <View style={SW.btnRow}>
+        {WATER_PORTIONS.map(ml => (
+          <Pressable key={ml} style={SW.addBtn} onPress={() => onAdd(ml)}>
+            <Text style={SW.addBtnText}>+{ml}мл</Text>
+          </Pressable>
+        ))}
+        <Pressable
+          style={[SW.addBtn, SW.undoBtn]}
+          onPress={onUndo}
+          disabled={water.water_ml === 0}
+        >
+          <Ionicons name="remove" size={16} color={water.water_ml === 0 ? '#D1D5DB' : '#EF4444'} />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function FoodScreen() {
@@ -117,12 +193,38 @@ export default function FoodScreen() {
   const [summary, setSummary] = useState<DiarySummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [water, setWater] = useState<WaterData>({ water_ml: 0, goal_ml: 2000 });
+
+  const handleAddWater = async (ml: number) => {
+    const prev = water;
+    setWater(w => ({ ...w, water_ml: w.water_ml + ml }));
+    try {
+      const updated = await logWater(ml);
+      setWater(updated);
+    } catch {
+      setWater(prev);
+    }
+  };
+
+  const handleUndoWater = async () => {
+    if (water.water_ml === 0) return;
+    const prev = water;
+    const undoMl = -200;
+    setWater(w => ({ ...w, water_ml: Math.max(0, w.water_ml + undoMl) }));
+    try {
+      const updated = await logWater(undoMl);
+      setWater(updated);
+    } catch {
+      setWater(prev);
+    }
+  };
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const data = await getDiary(date);
+      const [data, waterData] = await Promise.all([getDiary(date), getWater(date)]);
       setSummary(data);
+      setWater(waterData);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -197,6 +299,13 @@ export default function FoodScreen() {
 
             {/* BJU */}
             <BJURow totals={s.totals} goals={s.goals} />
+
+            {/* Water tracker */}
+            <WaterBlock
+              water={water}
+              onAdd={handleAddWater}
+              onUndo={handleUndoWater}
+            />
 
             {/* Section label */}
             <Text style={S.sectionTitle}>Приёмы пищи</Text>
@@ -304,4 +413,30 @@ const S = StyleSheet.create({
     shadowOpacity: 0.35, shadowRadius: 12, elevation: 8,
   },
   cameraFabText: { fontSize: 16, fontWeight: '700', color: '#fff' },
+});
+
+const SW = StyleSheet.create({
+  block: {
+    marginHorizontal: 16, marginBottom: 20,
+    backgroundColor: '#F0F9FF', borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: '#BAE6FD',
+  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dropIcon: { fontSize: 18 },
+  title: { fontSize: 15, fontWeight: '700', color: '#0369A1' },
+  counter: { fontSize: 13, fontWeight: '600', color: '#0369A1' },
+  glasses: { fontSize: 12, color: '#7DD3FC', fontWeight: '400' },
+  track: { height: 8, backgroundColor: '#E0F2FE', borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
+  fill: { height: 8, borderRadius: 4 },
+  doneText: { fontSize: 13, color: '#7B61FF', fontWeight: '600', marginBottom: 10 },
+  emptyText: { fontSize: 13, color: '#7DD3FC', marginBottom: 10 },
+  btnRow: { flexDirection: 'row', gap: 8 },
+  addBtn: {
+    flex: 1, paddingVertical: 8, borderRadius: 10,
+    backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#BAE6FD',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  addBtnText: { fontSize: 13, fontWeight: '700', color: '#0369A1' },
+  undoBtn: { flex: 0, width: 40, borderColor: '#FECACA' },
 });
