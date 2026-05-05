@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import {
   getMasterMe, updateMasterProfile, useAuth,
   getServices, addService, updateService, deleteService,
@@ -505,6 +506,13 @@ export default function ProfileScreen() {
         )}
       </View>
 
+      {/* ── Портфолио ── */}
+      <Pressable style={styles.portfolioRow} onPress={() => router.push('/portfolio')}>
+        <Ionicons name="images-outline" size={20} color="#4A3DB0" />
+        <Text style={styles.portfolioText}>Портфолио</Text>
+        <Ionicons name="chevron-forward" size={16} color="#B0A8B9" />
+      </Pressable>
+
       {/* ── Выход ── */}
       <Pressable style={styles.logoutBtn} onPress={handleLogout}>
         <Ionicons name="log-out-outline" size={20} color="#FF5C7A" />
@@ -630,6 +638,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center', marginTop: 4,
   },
   addServiceText: { color: '#4A3DB0', fontSize: 14, fontWeight: '600' },
+
+  // Portfolio link
+  portfolioRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    margin: 16, marginBottom: 0, paddingVertical: 16, paddingHorizontal: 20,
+    borderRadius: 14, backgroundColor: '#EDE8FF',
+  },
+  portfolioText: { flex: 1, fontSize: 16, color: '#4A3DB0', fontWeight: '600' },
 
   // Logout
   logoutBtn: {

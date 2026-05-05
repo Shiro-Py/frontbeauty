@@ -59,6 +59,10 @@ export type { NutrientData, FoodScanResult, DiaryEntry, DiarySummary, VitaminIns
 
 // Avatar
 export { getAvatarData, createAvatar } from './api/avatar';
+
+// Portfolio (Pro)
+export { getPortfolio, uploadPortfolioPhoto, deletePortfolioPhoto } from './api/portfolio';
+export type { PortfolioPhoto } from './api/portfolio';
 export type { AvatarSnapshot, WeeklyStats, AvatarRecommendation, AvatarData, AvatarAnalysis } from './api/avatar';
 
 // Components

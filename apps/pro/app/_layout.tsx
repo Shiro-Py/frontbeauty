@@ -61,6 +61,7 @@ function RootLayoutNav({ fontsLoaded }: { fontsLoaded: boolean }) {
         <Stack.Screen name="auth/onboarding" />
         <Stack.Screen name="auth/onboarding-step2" />
         <Stack.Screen name="auth/forgot-password" />
+        <Stack.Screen name="portfolio/index" />
       </Stack>
       {(!fontsLoaded || status === 'loading') && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>
