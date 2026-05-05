@@ -44,11 +44,11 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* 4. Поиск */}
+      {/* 4. Я (аватар) */}
       <Tabs.Screen
-        name="search"
+        name="me"
         options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="search-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="sparkles-outline" size={size} color={color} />,
         }}
       />
       {/* 5. Профиль */}
@@ -61,6 +61,7 @@ export default function TabLayout() {
       {/* Скрытые */}
       <Tabs.Screen name="favorites" options={{ href: null }} />
       <Tabs.Screen name="center" options={{ href: null }} />
+      <Tabs.Screen name="search" options={{ href: null }} />
     </Tabs>
   );
 }

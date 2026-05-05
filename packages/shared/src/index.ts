@@ -57,6 +57,10 @@ export type { SlotsResponse, BookingCreate, Booking, BookingStatus, Appointments
 export { getDiary, scanFood, logFood, deleteLog, getInsights, getWater, logWater } from './api/nutrition';
 export type { NutrientData, FoodScanResult, DiaryEntry, DiarySummary, VitaminInsight, WeeklyInsights, WaterData } from './api/nutrition';
 
+// Avatar
+export { getAvatarData, createAvatar } from './api/avatar';
+export type { AvatarSnapshot, WeeklyStats, AvatarRecommendation, AvatarData, AvatarAnalysis } from './api/avatar';
+
 // Components
 export { default as MasterPreviewCard } from './components/MasterPreviewCard';
 export { ProtectedRoute } from './components/ProtectedRoute';
