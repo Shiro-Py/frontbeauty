@@ -75,6 +75,10 @@ function RootLayoutNav() {
         <Stack.Screen name="booking/summary" />
         <Stack.Screen name="booking/confirmation" />
         <Stack.Screen name="booking/[id]" />
+        <Stack.Screen name="payment/index" />
+        <Stack.Screen name="food/scan" />
+        <Stack.Screen name="food/result" />
+        <Stack.Screen name="food/insights" />
       </Stack>
       {status === 'loading' && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fff' }}>

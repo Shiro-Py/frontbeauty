@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, View, StyleSheet, Image } from 'react-native';
+import { Pressable, View, StyleSheet } from 'react-native';
 
 export default function TabLayout() {
   return (
@@ -20,21 +20,16 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
-      {/* 2. Поиск */}
+      {/* 2. Записи */}
       <Tabs.Screen
-        name="search"
+        name="booking"
         options={{
-          tabBarIcon: ({ focused }) => (
-            <Image
-              source={require('../../assets/images/icon-location-star.png')}
-              style={{ width: 28, height: 28, tintColor: focused ? '#1A1A1A' : '#9CA3AF' }}
-            />
-          ),
+          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
         }}
       />
-      {/* 3. Центр — большая кнопка */}
+      {/* 3. Питание — центральная FAB-кнопка */}
       <Tabs.Screen
-        name="center"
+        name="food"
         options={{
           tabBarButton: (props) => (
             <Pressable
@@ -43,17 +38,17 @@ export default function TabLayout() {
               onPress={props.onPress ?? undefined}
             >
               <View style={S.centerCircle}>
-                <Ionicons name="sparkles" size={22} color="#fff" />
+                <Ionicons name="restaurant-outline" size={22} color="#fff" />
               </View>
             </Pressable>
           ),
         }}
       />
-      {/* 4. Записи */}
+      {/* 4. Поиск */}
       <Tabs.Screen
-        name="booking"
+        name="search"
         options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="calendar-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="search-outline" size={size} color={color} />,
         }}
       />
       {/* 5. Профиль */}
@@ -65,6 +60,7 @@ export default function TabLayout() {
       />
       {/* Скрытые */}
       <Tabs.Screen name="favorites" options={{ href: null }} />
+      <Tabs.Screen name="center" options={{ href: null }} />
     </Tabs>
   );
 }
