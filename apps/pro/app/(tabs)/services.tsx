@@ -391,12 +391,8 @@ export default function ServicesScreen() {
   };
 
   const handleTemplatesSave = async (items: TemplateServiceCreate[]) => {
-    const maxOrder = services.reduce((m, s) => Math.max(m, s.sort_order), 0);
-    const created: Service[] = [];
-    for (let i = 0; i < items.length; i++) {
-      const it = items[i];
-      const svc = await createServiceFromTemplate(it);
-      // mock returns void; reload to get fresh list
+    for (const it of items) {
+      await createServiceFromTemplate(it);
     }
     setTemplateSheetVisible(false);
     await load();

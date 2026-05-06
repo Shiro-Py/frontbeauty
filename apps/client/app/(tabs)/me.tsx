@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
 import {
   View, Text, ScrollView, StyleSheet, Pressable,
-  Animated, ActivityIndicator, Alert,
+  Animated, ActivityIndicator, Alert, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -45,7 +46,7 @@ function AvatarHeroWithImage({ imageUrl, onCreatePress }: { imageUrl: string; on
   return (
     <Pressable onPress={onCreatePress}>
       <Animated.View style={[S.avatarCircle, { transform: [{ translateY: floatAnim }] }]}>
-        <Ionicons name="person" size={64} color="#C4B5FD" />
+        <Image source={{ uri: imageUrl }} style={S.avatarImg} />
         <View style={S.avatarBadge}>
           <Ionicons name="refresh" size={12} color="#fff" />
         </View>
@@ -98,9 +99,9 @@ export default function MeScreen() {
   const [data, setData] = useState<AvatarData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     load();
-  }, []);
+  }, []));
 
   async function load() {
     try {
@@ -217,6 +218,7 @@ const S = StyleSheet.create({
     shadowColor: '#7B61FF', shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2, shadowRadius: 16, elevation: 8,
   },
+  avatarImg: { width: 140, height: 140, borderRadius: 70 },
   avatarBadge: {
     position: 'absolute', bottom: 8, right: 8,
     width: 24, height: 24, borderRadius: 12,
